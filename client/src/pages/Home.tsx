@@ -1,25 +1,23 @@
 /**
  * Dashboard de Vendas — Corporate Analytics / Swiss Industrial Design
- * 
- * Design: Grid rígido, tipografia como hierarquia, cores funcionais,
- * alta densidade informacional com legibilidade máxima.
- * Palette: Off-white (#F8F6F3), Grafite (#1A1A2E), Azul-petróleo (#0F4C75),
- * Laranja queimado (#E85D04), Verde musgo (#2D6A4F)
+ * Dados do banco de dados via tRPC
  */
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   useData,
-  useFilteredData,
+  useVendedores,
+  useCidades,
+  useAnos,
+  useRelatorioMensal,
+  useTotalRegistros,
   calcVendedorStats,
   calcMonthlyData,
   formatCurrency,
   formatNumber,
   formatPercent,
-  getUniqueVendedores,
-  getUniqueMeses,
-  getUniqueCidades,
   type VendedorStats,
+  type ContaRecord,
 } from "@/hooks/useData";
 import KPICard from "@/components/KPICard";
 import {
@@ -56,13 +54,23 @@ import {
   BarChart3,
   FileText,
   ArrowUpDown,
+  Upload,
+  Calendar,
+  Database,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
 const CHART_COLORS = [
   "#0F4C75", "#2D6A4F", "#E85D04", "#6B4C9A", "#C45D3E",
   "#1B7A8C", "#8B6914", "#4A7C59", "#9B4DCA", "#D4763D",
   "#2E86AB", "#A23B72", "#F18F01", "#3C6E71", "#D64045",
 ];
+
+function toNum(val: string | null | undefined): number {
+  if (!val) return 0;
+  return parseFloat(val) || 0;
+}
 
 function CustomTooltip({ active, payload, label }: any) {
   if (!active || !payload || !payload.length) return null;
@@ -76,7 +84,7 @@ function CustomTooltip({ active, payload, label }: any) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="kpi-value text-foreground">
+          <span className="font-mono text-foreground">
             {typeof entry.value === "number" ? formatCurrency(entry.value) : entry.value}
           </span>
         </p>
@@ -97,7 +105,7 @@ function CustomTooltipQtd({ active, payload, label }: any) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="kpi-value text-foreground">
+          <span className="font-mono text-foreground">
             {formatNumber(entry.value)}
           </span>
         </p>
@@ -107,38 +115,46 @@ function CustomTooltipQtd({ active, payload, label }: any) {
 }
 
 export default function Home() {
-  const { records, loading, error } = useData();
   const [vendedorFilter, setVendedorFilter] = useState("todos");
   const [mesFilter, setMesFilter] = useState("todos");
   const [cidadeFilter, setCidadeFilter] = useState("todos");
+  const [anoFilter, setAnoFilter] = useState("todos");
   const [sortField, setSortField] = useState<keyof VendedorStats>("totalValor");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const filtered = useFilteredData(records, vendedorFilter, mesFilter, cidadeFilter);
-  const vendedorStats = useMemo(() => calcVendedorStats(filtered), [filtered]);
-  const monthlyData = useMemo(() => calcMonthlyData(filtered), [filtered]);
-  const vendedores = useMemo(() => getUniqueVendedores(records), [records]);
-  const meses = useMemo(() => getUniqueMeses(records), [records]);
-  const cidades = useMemo(() => getUniqueCidades(records), [records]);
+  const filters = useMemo(() => ({
+    vendedor: vendedorFilter,
+    mes: mesFilter,
+    cidade: cidadeFilter,
+    ano: anoFilter,
+  }), [vendedorFilter, mesFilter, cidadeFilter, anoFilter]);
+
+  const { records, loading, error } = useData(filters);
+  const { data: vendedores } = useVendedores();
+  const { data: cidades } = useCidades();
+  const { data: anos } = useAnos();
+  const { data: totalRegistros } = useTotalRegistros();
+
+  const vendedorStats = useMemo(() => calcVendedorStats(records), [records]);
+  const monthlyData = useMemo(() => calcMonthlyData(records), [records]);
 
   // KPI totals
-  const totalValor = useMemo(() => filtered.reduce((s, r) => s + r.valor, 0), [filtered]);
-  const totalPago = useMemo(() => filtered.reduce((s, r) => s + r.valor_pago, 0), [filtered]);
-  const totalDesconto = useMemo(() => filtered.reduce((s, r) => s + r.desconto, 0), [filtered]);
-  const qtdTitulos = filtered.length;
+  const totalValor = useMemo(() => records.reduce((s: number, r: ContaRecord) => s + toNum(r.valor), 0), [records]);
+  const totalPago = useMemo(() => records.reduce((s: number, r: ContaRecord) => s + toNum(r.valorPago), 0), [records]);
+  const qtdTitulos = records.length;
   const clientesUnicos = useMemo(
-    () => new Set(filtered.map((r) => r.cliente).filter(Boolean)).size,
-    [filtered]
+    () => new Set(records.map((r: ContaRecord) => r.razaoCli).filter(Boolean)).size,
+    [records]
   );
   const mediaAtraso = useMemo(() => {
-    const comAtraso = filtered.filter((r) => r.atraso_dias !== null);
+    const comAtraso = records.filter((r: ContaRecord) => r.atrasoDias !== null);
     return comAtraso.length > 0
-      ? comAtraso.reduce((s, r) => s + (r.atraso_dias || 0), 0) / comAtraso.length
+      ? comAtraso.reduce((s: number, r: ContaRecord) => s + (r.atrasoDias || 0), 0) / comAtraso.length
       : 0;
-  }, [filtered]);
+  }, [records]);
   const titulosAtrasados = useMemo(
-    () => filtered.filter((r) => r.atraso_dias !== null && r.atraso_dias > 0).length,
-    [filtered]
+    () => records.filter((r: ContaRecord) => r.atrasoDias !== null && r.atrasoDias > 0).length,
+    [records]
   );
   const taxaRecebimento = totalValor > 0 ? (totalPago / totalValor) * 100 : 0;
 
@@ -158,33 +174,32 @@ export default function Home() {
     return sorted;
   }, [vendedorStats, sortField, sortDir]);
 
-  // Top 10 vendedores for chart
   const top10 = useMemo(() => vendedorStats.slice(0, 10), [vendedorStats]);
 
   // Pie data for payment types
   const pieData = useMemo(() => {
     const map = new Map<string, number>();
-    for (const r of filtered) {
+    for (const r of records) {
       if (!r.descricao) continue;
-      map.set(r.descricao, (map.get(r.descricao) || 0) + r.valor);
+      map.set(r.descricao, (map.get(r.descricao) || 0) + toNum(r.valor));
     }
     return Array.from(map.entries())
       .map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }))
       .sort((a, b) => b.value - a.value);
-  }, [filtered]);
+  }, [records]);
 
   // Top 10 clientes
   const topClientes = useMemo(() => {
     const map = new Map<string, number>();
-    for (const r of filtered) {
-      if (!r.cliente) continue;
-      map.set(r.cliente, (map.get(r.cliente) || 0) + r.valor);
+    for (const r of records) {
+      if (!r.razaoCli) continue;
+      map.set(r.razaoCli, (map.get(r.razaoCli) || 0) + toNum(r.valor));
     }
     return Array.from(map.entries())
       .map(([name, value]) => ({ name, value: Math.round(value * 100) / 100 }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
-  }, [filtered]);
+  }, [records]);
 
   // Atraso distribution
   const atrasoDistrib = useMemo(() => {
@@ -197,18 +212,18 @@ export default function Home() {
       { label: "31-60 dias", min: 31, max: 60, count: 0, valor: 0 },
       { label: "60+ dias", min: 61, max: Infinity, count: 0, valor: 0 },
     ];
-    for (const r of filtered) {
-      if (r.atraso_dias === null) continue;
+    for (const r of records) {
+      if (r.atrasoDias === null) continue;
       for (const b of buckets) {
-        if (r.atraso_dias >= b.min && r.atraso_dias <= b.max) {
+        if (r.atrasoDias >= b.min && r.atrasoDias <= b.max) {
           b.count++;
-          b.valor += r.valor;
+          b.valor += toNum(r.valor);
           break;
         }
       }
     }
     return buckets;
-  }, [filtered]);
+  }, [records]);
 
   const handleSort = (field: keyof VendedorStats) => {
     if (sortField === field) {
@@ -218,6 +233,14 @@ export default function Home() {
       setSortDir("desc");
     }
   };
+
+  const hasFilters = vendedorFilter !== "todos" || mesFilter !== "todos" || cidadeFilter !== "todos" || anoFilter !== "todos";
+
+  // Build meses list from monthlyData
+  const mesesNomes = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
 
   if (loading) {
     return (
@@ -251,74 +274,95 @@ export default function Home() {
         <div className="container py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight">
-                UNIX PACK
-                <span className="text-muted-foreground font-normal ml-2 text-base">
-                  Embalagens Flexíveis
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold text-foreground tracking-tight">
+                  UNIX PACK
+                  <span className="text-muted-foreground font-normal ml-2 text-base">
+                    Embalagens Flexíveis
+                  </span>
+                </h1>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  <Database className="w-3 h-3" />
+                  {formatNumber(totalRegistros ?? 0)} registros
                 </span>
-              </h1>
+              </div>
               <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">
-                Contas a Receber — Jan/2025 a Dez/2025
+                Contas a Receber — Dados do Banco
               </p>
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={vendedorFilter} onValueChange={setVendedorFilter}>
-                <SelectTrigger className="w-[200px] h-8 text-xs bg-background">
-                  <SelectValue placeholder="Vendedor" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os vendedores</SelectItem>
-                  {vendedores.map((v) => (
-                    <SelectItem key={v} value={v}>
-                      {v.length > 28 ? v.substring(0, 28) + "…" : v}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={mesFilter} onValueChange={setMesFilter}>
-                <SelectTrigger className="w-[180px] h-8 text-xs bg-background">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos os meses</SelectItem>
-                  {meses.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={cidadeFilter} onValueChange={setCidadeFilter}>
-                <SelectTrigger className="w-[180px] h-8 text-xs bg-background">
-                  <SelectValue placeholder="Cidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todas as cidades</SelectItem>
-                  {cidades.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c.length > 25 ? c.substring(0, 25) + "…" : c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {(vendedorFilter !== "todos" || mesFilter !== "todos" || cidadeFilter !== "todos") && (
-                <button
-                  onClick={() => {
-                    setVendedorFilter("todos");
-                    setMesFilter("todos");
-                    setCidadeFilter("todos");
-                  }}
-                  className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
-                >
-                  Limpar filtros
-                </button>
-              )}
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Link href="/relatorio">
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                  Relatório Mensal
+                </Button>
+              </Link>
+              <Link href="/upload">
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Upload className="w-3.5 h-3.5 mr-1.5" />
+                  Importar CSV
+                </Button>
+              </Link>
             </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            <Select value={anoFilter} onValueChange={setAnoFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-background">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os anos</SelectItem>
+                {(anos || []).map((a: string) => (
+                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={vendedorFilter} onValueChange={setVendedorFilter}>
+              <SelectTrigger className="w-[200px] h-8 text-xs bg-background">
+                <SelectValue placeholder="Vendedor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os vendedores</SelectItem>
+                {(vendedores || []).map((v: string) => (
+                  <SelectItem key={v} value={v}>
+                    {v.length > 28 ? v.substring(0, 28) + "…" : v}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={cidadeFilter} onValueChange={setCidadeFilter}>
+              <SelectTrigger className="w-[180px] h-8 text-xs bg-background">
+                <SelectValue placeholder="Cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todas as cidades</SelectItem>
+                {(cidades || []).map((c: string) => (
+                  <SelectItem key={c} value={c}>
+                    {c.length > 25 ? c.substring(0, 25) + "…" : c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {hasFilters && (
+              <button
+                onClick={() => {
+                  setVendedorFilter("todos");
+                  setMesFilter("todos");
+                  setCidadeFilter("todos");
+                  setAnoFilter("todos");
+                }}
+                className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+              >
+                Limpar filtros
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -422,27 +466,12 @@ export default function Home() {
                       tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                       axisLine={false}
                       tickLine={false}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                      tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
-                    <Area
-                      type="monotone"
-                      dataKey="valor"
-                      name="Faturado"
-                      stroke="#0F4C75"
-                      strokeWidth={2.5}
-                      fill="url(#gradValor)"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="valorPago"
-                      name="Recebido"
-                      stroke="#2D6A4F"
-                      strokeWidth={2}
-                      strokeDasharray="6 3"
-                      fill="url(#gradPago)"
-                    />
+                    <Area type="monotone" dataKey="valor" name="Faturado" stroke="#0F4C75" strokeWidth={2.5} fill="url(#gradValor)" />
+                    <Area type="monotone" dataKey="valorPago" name="Recebido" stroke="#2D6A4F" strokeWidth={2} strokeDasharray="6 3" fill="url(#gradPago)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </motion.div>
@@ -457,25 +486,15 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground mb-4">Distribuição por tipo</p>
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="45%"
-                      innerRadius={55}
-                      outerRadius={90}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {pieData.map((_, i) => (
+                    <Pie data={pieData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} paddingAngle={2} dataKey="value">
+                      {pieData.map((_: any, i: number) => (
                         <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                     <Legend
                       wrapperStyle={{ fontSize: 10 }}
-                      formatter={(value: string) =>
-                        value.length > 18 ? value.substring(0, 18) + "…" : value
-                      }
+                      formatter={(value: string) => value.length > 18 ? value.substring(0, 18) + "…" : value}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -497,22 +516,8 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={top10} layout="vertical" margin={{ left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                    <XAxis
-                      type="number"
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="nome"
-                      width={140}
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 20) + "…" : v}
-                    />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="nome" width={140} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 20) + "…" : v} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="totalValor" name="Faturado" fill="#0F4C75" radius={[0, 4, 4, 0]} barSize={18} />
                     <Bar dataKey="totalPago" name="Recebido" fill="#2D6A4F" radius={[0, 4, 4, 0]} barSize={18} />
@@ -531,21 +536,8 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={top10} layout="vertical" margin={{ left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                    <XAxis
-                      type="number"
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="nome"
-                      width={140}
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 20) + "…" : v}
-                    />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="nome" width={140} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 20) + "…" : v} />
                     <Tooltip content={<CustomTooltipQtd />} />
                     <Bar dataKey="qtdTitulos" name="Títulos" fill="#6B4C9A" radius={[0, 4, 4, 0]} barSize={18} />
                     <Bar dataKey="qtdClientes" name="Clientes" fill="#C45D3E" radius={[0, 4, 4, 0]} barSize={18} />
@@ -568,25 +560,11 @@ export default function Home() {
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart data={topClientes} layout="vertical" margin={{ left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={200}
-                    tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v: string) => v.length > 30 ? v.substring(0, 30) + "…" : v}
-                  />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={200} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v: string) => v.length > 30 ? v.substring(0, 30) + "…" : v} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="value" name="Faturado" fill="#0F4C75" radius={[0, 4, 4, 0]} barSize={22}>
-                    {topClientes.map((_, i) => (
+                    {topClientes.map((_: any, i: number) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
                   </Bar>
@@ -609,32 +587,12 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={atrasoDistrib}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={{ stroke: "var(--border)" }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={{ stroke: "var(--border)" }} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltipQtd />} />
                     <Bar dataKey="count" name="Títulos" radius={[4, 4, 0, 0]} barSize={36}>
                       {atrasoDistrib.map((entry, i) => (
-                        <Cell
-                          key={i}
-                          fill={
-                            entry.label === "Antecipado"
-                              ? "#2D6A4F"
-                              : entry.label === "Em dia"
-                              ? "#0F4C75"
-                              : i <= 3
-                              ? "#E8A838"
-                              : "#E85D04"
-                          }
-                        />
+                        <Cell key={i} fill={entry.label === "Antecipado" ? "#2D6A4F" : entry.label === "Em dia" ? "#0F4C75" : i <= 3 ? "#E8A838" : "#E85D04"} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -652,33 +610,12 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={atrasoDistrib}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis
-                      dataKey="label"
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={{ stroke: "var(--border)" }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                    />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={{ stroke: "var(--border)" }} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="valor" name="Valor" radius={[4, 4, 0, 0]} barSize={36}>
                       {atrasoDistrib.map((entry, i) => (
-                        <Cell
-                          key={i}
-                          fill={
-                            entry.label === "Antecipado"
-                              ? "#2D6A4F"
-                              : entry.label === "Em dia"
-                              ? "#0F4C75"
-                              : i <= 3
-                              ? "#E8A838"
-                              : "#E85D04"
-                          }
-                        />
+                        <Cell key={i} fill={entry.label === "Antecipado" ? "#2D6A4F" : entry.label === "Em dia" ? "#0F4C75" : i <= 3 ? "#E8A838" : "#E85D04"} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -711,9 +648,7 @@ export default function Home() {
               <table className="w-full text-xs">
                 <thead className="bg-muted/50 sticky top-0">
                   <tr>
-                    <th className="text-left py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider">
-                      #
-                    </th>
+                    <th className="text-left py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider">#</th>
                     <SortHeader field="nome" label="Vendedor" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                     <SortHeader field="totalValor" label="Faturado" sortField={sortField} sortDir={sortDir} onSort={handleSort} align="right" />
                     <SortHeader field="totalPago" label="Recebido" sortField={sortField} sortDir={sortDir} onSort={handleSort} align="right" />
@@ -727,46 +662,25 @@ export default function Home() {
                 </thead>
                 <tbody>
                   {sortedStats.map((v, i) => (
-                    <tr
-                      key={v.nome}
-                      className="border-t border-border/50 hover:bg-muted/30 transition-colors"
-                    >
+                    <tr key={v.nome} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 px-4 text-muted-foreground">{i + 1}</td>
-                      <td className="py-2.5 px-4 font-medium text-foreground max-w-[200px] truncate" title={v.nome}>
-                        {v.nome}
-                      </td>
-                      <td className="py-2.5 px-4 text-right table-value">{formatCurrency(v.totalValor)}</td>
-                      <td className="py-2.5 px-4 text-right table-value">{formatCurrency(v.totalPago)}</td>
+                      <td className="py-2.5 px-4 font-medium text-foreground max-w-[200px] truncate" title={v.nome}>{v.nome}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalValor)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalPago)}</td>
                       <td className="py-2.5 px-4 text-right">
-                        <span
-                          className={`table-value px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            v.taxaRecebimento >= 98
-                              ? "bg-green-ok-light text-green-ok"
-                              : v.taxaRecebimento >= 90
-                              ? "bg-petrol-bg text-petrol"
-                              : "bg-orange-alert-light text-orange-alert"
-                          }`}
-                        >
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${v.taxaRecebimento >= 98 ? "bg-green-ok-light text-green-ok" : v.taxaRecebimento >= 90 ? "bg-petrol-bg text-petrol" : "bg-orange-alert-light text-orange-alert"}`}>
                           {formatPercent(v.taxaRecebimento)}
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-right table-value">{v.qtdTitulos}</td>
-                      <td className="py-2.5 px-4 text-right table-value">{v.qtdClientes}</td>
-                      <td className="py-2.5 px-4 text-right table-value">{formatCurrency(v.valorMedio)}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{v.qtdTitulos}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{v.qtdClientes}</td>
+                      <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.valorMedio)}</td>
                       <td className="py-2.5 px-4 text-right">
-                        <span
-                          className={`table-value px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            v.mediaAtraso <= 0
-                              ? "bg-green-ok-light text-green-ok"
-                              : v.mediaAtraso <= 10
-                              ? "bg-petrol-bg text-petrol"
-                              : "bg-orange-alert-light text-orange-alert"
-                          }`}
-                        >
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${v.mediaAtraso <= 0 ? "bg-green-ok-light text-green-ok" : v.mediaAtraso <= 10 ? "bg-petrol-bg text-petrol" : "bg-orange-alert-light text-orange-alert"}`}>
                           {v.mediaAtraso}d
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-right table-value">
+                      <td className="py-2.5 px-4 text-right font-mono">
                         {v.titulosAtrasados > 0 ? (
                           <span className="text-orange-alert">{v.titulosAtrasados}</span>
                         ) : (
@@ -784,7 +698,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="text-center py-4 border-t border-border">
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-            UNIX PACK Embalagens Flexíveis — Dashboard de Vendas 2025
+            UNIX PACK Embalagens Flexíveis — Dashboard de Vendas
           </p>
         </footer>
       </main>
@@ -794,12 +708,7 @@ export default function Home() {
 
 // Sort header component
 function SortHeader({
-  field,
-  label,
-  sortField,
-  sortDir,
-  onSort,
-  align = "left",
+  field, label, sortField, sortDir, onSort, align = "left",
 }: {
   field: keyof VendedorStats;
   label: string;
@@ -812,15 +721,11 @@ function SortHeader({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors select-none ${
-        align === "right" ? "text-right" : "text-left"
-      } ${isActive ? "text-foreground" : ""}`}
+      className={`py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:text-foreground transition-colors select-none ${align === "right" ? "text-right" : "text-left"} ${isActive ? "text-foreground" : ""}`}
     >
       <span className="inline-flex items-center gap-1">
         {label}
-        {isActive && (
-          <ArrowUpDown className="w-3 h-3" style={{ transform: sortDir === "asc" ? "scaleY(-1)" : undefined }} />
-        )}
+        {isActive && <ArrowUpDown className="w-3 h-3" style={{ transform: sortDir === "asc" ? "scaleY(-1)" : undefined }} />}
       </span>
     </th>
   );

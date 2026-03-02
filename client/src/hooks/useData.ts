@@ -1,27 +1,24 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { trpc } from "@/lib/trpc";
 
-export interface Record {
+export interface ContaRecord {
+  id: number;
   cont: string;
-  situacao: string;
-  num_nf: string;
-  cod_pessoa: string;
+  situacao: string | null;
   parcela: string;
-  dta_vecto: string | null;
-  valor: number;
-  dta_pagto: string | null;
-  valor_pago: number;
-  tipo_doc: string;
-  desconto: number;
-  dta_emissao: string | null;
-  tipo_pagto: string;
-  sit_doc: string;
-  cliente: string;
-  cidade: string;
-  descricao: string;
-  razao: string;
-  vendedor: string;
-  cod_equipe: string;
-  atraso_dias: number | null;
+  dtaVecto: string | null;
+  valor: string | null;
+  dtaPagto: string | null;
+  valorPago: string | null;
+  desconto: string | null;
+  razaoCli: string | null;
+  cidade: string | null;
+  descricao: string | null;
+  razao: string | null;
+  vendedor: string | null;
+  codEquipe: string | null;
+  codEmpresa: string;
+  atrasoDias: number | null;
 }
 
 export interface VendedorStats {
@@ -48,50 +45,81 @@ export interface MonthlyData {
   qtd: number;
 }
 
-export function useData() {
-  const [records, setRecords] = useState<Record[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/data.json")
-      .then((res) => res.json())
-      .then((data: Record[]) => {
-        setRecords(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  return { records, loading, error };
+// Parse decimal strings from DB to numbers
+function toNum(val: string | null | undefined): number {
+  if (!val) return 0;
+  return parseFloat(val) || 0;
 }
 
-export function useFilteredData(records: Record[], vendedorFilter: string, mesFilter: string, cidadeFilter: string) {
-  return useMemo(() => {
-    let filtered = records;
-    
-    if (vendedorFilter && vendedorFilter !== "todos") {
-      filtered = filtered.filter((r) => r.vendedor === vendedorFilter);
-    }
-    if (mesFilter && mesFilter !== "todos") {
-      filtered = filtered.filter((r) => {
-        if (!r.dta_vecto) return false;
-        return r.dta_vecto.substring(0, 7) === mesFilter;
-      });
-    }
-    if (cidadeFilter && cidadeFilter !== "todos") {
-      filtered = filtered.filter((r) => r.cidade === cidadeFilter);
-    }
-    return filtered;
-  }, [records, vendedorFilter, mesFilter, cidadeFilter]);
+export function useData(filters?: {
+  vendedor?: string;
+  mes?: string;
+  cidade?: string;
+  ano?: string;
+}) {
+  const input = useMemo(() => ({
+    vendedor: filters?.vendedor && filters.vendedor !== "todos" ? filters.vendedor : undefined,
+    mes: filters?.mes && filters.mes !== "todos" ? filters.mes : undefined,
+    cidade: filters?.cidade && filters.cidade !== "todos" ? filters.cidade : undefined,
+    ano: filters?.ano && filters.ano !== "todos" ? filters.ano : undefined,
+  }), [filters?.vendedor, filters?.mes, filters?.cidade, filters?.ano]);
+
+  const { data, isLoading, error } = trpc.contas.list.useQuery(input);
+
+  const records: ContaRecord[] = useMemo(() => {
+    if (!data) return [];
+    return data.map((r: any) => ({
+      id: r.id,
+      cont: r.cont,
+      situacao: r.situacao,
+      parcela: r.parcela,
+      dtaVecto: r.dtaVecto,
+      valor: r.valor,
+      dtaPagto: r.dtaPagto,
+      valorPago: r.valorPago,
+      desconto: r.desconto,
+      razaoCli: r.razaoCli,
+      cidade: r.cidade,
+      descricao: r.descricao,
+      razao: r.razao,
+      vendedor: r.vendedor,
+      codEquipe: r.codEquipe,
+      codEmpresa: r.codEmpresa,
+      atrasoDias: r.atrasoDias,
+    }));
+  }, [data]);
+
+  return { records, loading: isLoading, error: error?.message || null };
 }
 
-export function calcVendedorStats(records: Record[]): VendedorStats[] {
-  const map = new Map<string, Record[]>();
-  
+export function useVendedores() {
+  return trpc.contas.vendedores.useQuery();
+}
+
+export function useCidades() {
+  return trpc.contas.cidades.useQuery();
+}
+
+export function useAnos() {
+  return trpc.contas.anos.useQuery();
+}
+
+export function useRelatorioMensal(filters?: { vendedor?: string; ano?: string }) {
+  const input = useMemo(() => ({
+    vendedor: filters?.vendedor && filters.vendedor !== "todos" ? filters.vendedor : undefined,
+    ano: filters?.ano && filters.ano !== "todos" ? filters.ano : undefined,
+  }), [filters?.vendedor, filters?.ano]);
+
+  return trpc.contas.relatorioMensal.useQuery(input);
+}
+
+export function useTotalRegistros() {
+  return trpc.contas.totalRegistros.useQuery();
+}
+
+export function calcVendedorStats(records: ContaRecord[]): VendedorStats[] {
+  const map = new Map<string, ContaRecord[]>();
+
   for (const r of records) {
     if (!r.vendedor) continue;
     const arr = map.get(r.vendedor) || [];
@@ -100,23 +128,24 @@ export function calcVendedorStats(records: Record[]): VendedorStats[] {
   }
 
   const stats: VendedorStats[] = [];
-  
+
   for (const [nome, recs] of Array.from(map.entries())) {
-    const totalValor = recs.reduce((s: number, r: Record) => s + r.valor, 0);
-    const totalPago = recs.reduce((s: number, r: Record) => s + r.valor_pago, 0);
-    const totalDesconto = recs.reduce((s: number, r: Record) => s + r.desconto, 0);
-    const clientes = new Set(recs.map((r: Record) => r.cliente).filter(Boolean));
-    const cidades = new Set(recs.map((r: Record) => r.cidade).filter(Boolean));
-    
-    const comAtraso = recs.filter((r: Record) => r.atraso_dias !== null);
-    const mediaAtraso = comAtraso.length > 0
-      ? comAtraso.reduce((s: number, r: Record) => s + (r.atraso_dias || 0), 0) / comAtraso.length
-      : 0;
-    
-    const titulosEmDia = recs.filter((r: Record) => r.atraso_dias !== null && r.atraso_dias === 0).length;
-    const titulosAtrasados = recs.filter((r: Record) => r.atraso_dias !== null && r.atraso_dias > 0).length;
-    const titulosAntecipados = recs.filter((r: Record) => r.atraso_dias !== null && r.atraso_dias < 0).length;
-    
+    const totalValor = recs.reduce((s: number, r: ContaRecord) => s + toNum(r.valor), 0);
+    const totalPago = recs.reduce((s: number, r: ContaRecord) => s + toNum(r.valorPago), 0);
+    const totalDesconto = recs.reduce((s: number, r: ContaRecord) => s + toNum(r.desconto), 0);
+    const clientes = new Set(recs.map((r: ContaRecord) => r.razaoCli).filter(Boolean));
+    const cidades = new Set(recs.map((r: ContaRecord) => r.cidade).filter(Boolean));
+
+    const comAtraso = recs.filter((r: ContaRecord) => r.atrasoDias !== null);
+    const mediaAtraso =
+      comAtraso.length > 0
+        ? comAtraso.reduce((s: number, r: ContaRecord) => s + (r.atrasoDias || 0), 0) / comAtraso.length
+        : 0;
+
+    const titulosEmDia = recs.filter((r: ContaRecord) => r.atrasoDias !== null && r.atrasoDias === 0).length;
+    const titulosAtrasados = recs.filter((r: ContaRecord) => r.atrasoDias !== null && r.atrasoDias > 0).length;
+    const titulosAntecipados = recs.filter((r: ContaRecord) => r.atrasoDias !== null && r.atrasoDias < 0).length;
+
     stats.push({
       nome,
       totalValor,
@@ -137,19 +166,16 @@ export function calcVendedorStats(records: Record[]): VendedorStats[] {
   return stats.sort((a, b) => b.totalValor - a.totalValor);
 }
 
-export function calcMonthlyData(records: Record[]): MonthlyData[] {
+export function calcMonthlyData(records: ContaRecord[]): MonthlyData[] {
   const map = new Map<string, { valor: number; valorPago: number; qtd: number }>();
-  const meses = [
-    "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
-    "Jul", "Ago", "Set", "Out", "Nov", "Dez"
-  ];
+  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
   for (const r of records) {
-    if (!r.dta_vecto) continue;
-    const mes = r.dta_vecto.substring(0, 7);
+    if (!r.dtaVecto) continue;
+    const mes = r.dtaVecto.substring(0, 7);
     const existing = map.get(mes) || { valor: 0, valorPago: 0, qtd: 0 };
-    existing.valor += r.valor;
-    existing.valorPago += r.valor_pago;
+    existing.valor += toNum(r.valor);
+    existing.valorPago += toNum(r.valorPago);
     existing.qtd += 1;
     map.set(mes, existing);
   }
@@ -182,24 +208,4 @@ export function formatNumber(value: number): string {
 
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`;
-}
-
-export function getUniqueVendedores(records: Record[]): string[] {
-  return Array.from(new Set(records.map((r) => r.vendedor).filter(Boolean))).sort();
-}
-
-export function getUniqueMeses(records: Record[]): { value: string; label: string }[] {
-  const mesesNomes = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
-  const meses = Array.from(new Set(records.map((r) => r.dta_vecto?.substring(0, 7)).filter((v): v is string => Boolean(v))));
-  return meses.sort().map((m) => {
-    const monthIdx = parseInt(m.split("-")[1]) - 1;
-    return { value: m, label: `${mesesNomes[monthIdx]} ${m.split("-")[0]}` };
-  });
-}
-
-export function getUniqueCidades(records: Record[]): string[] {
-  return Array.from(new Set(records.map((r) => r.cidade).filter(Boolean))).sort();
 }
