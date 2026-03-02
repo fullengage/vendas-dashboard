@@ -1,0 +1,15 @@
+{
+  "query": "SELECT regiao, COUNT(*) as qtd, SUM(CAST(valor AS DECIMAL(15,2))) as total_valor FROM contas_receber WHERE regiao IS NOT NULL AND regiao != '' GROUP BY regiao ORDER BY total_valor DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT regiao, COUNT(*) as qtd, SUM(CAST(valor AS DECIMAL(15,2))) as total_valor FROM contas_receber WHERE regiao IS NOT NULL AND regiao != '' GROUP BY regiao ORDER BY total_valor DESC LIMIT 20;",
+  "rows": [
+    {
+      "regiao": "UNICA",
+      "qtd": "2974",
+      "total_valor": "18177091.89"
+    }
+  ],
+  "messages": [],
+  "stdout": "regiao\tqtd\ttotal_valor\nUNICA\t2974\t18177091.89\n",
+  "stderr": "",
+  "execution_time_ms": 370
+}

@@ -280,3 +280,43 @@ export async function getTotalRegistros() {
   const result = await db.select({ total: count() }).from(contasReceber);
   return result[0]?.total ?? 0;
 }
+
+export async function getRelatorioPorCidade(filters?: {
+  ano?: string;
+  vendedor?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  conditions.push(sql`${contasReceber.cidade} IS NOT NULL AND ${contasReceber.cidade} != ''`);
+
+  if (filters?.vendedor) {
+    conditions.push(eq(contasReceber.vendedor, filters.vendedor));
+  }
+  if (filters?.ano) {
+    conditions.push(sql`${contasReceber.dtaVecto} >= ${filters.ano + '-01-01'}`);
+    conditions.push(sql`${contasReceber.dtaVecto} <= ${filters.ano + '-12-31'}`);
+  }
+
+  const whereClause = and(...conditions);
+
+  const result = await db
+    .select({
+      cidade: contasReceber.cidade,
+      totalValor: sql<string>`COALESCE(SUM(${contasReceber.valor}), 0)`,
+      totalPago: sql<string>`COALESCE(SUM(${contasReceber.valorPago}), 0)`,
+      totalDesconto: sql<string>`COALESCE(SUM(${contasReceber.desconto}), 0)`,
+      qtdTitulos: sql<number>`COUNT(*)`,
+      qtdClientes: sql<number>`COUNT(DISTINCT ${contasReceber.razaoCli})`,
+      qtdVendedores: sql<number>`COUNT(DISTINCT ${contasReceber.vendedor})`,
+      mediaAtraso: sql<string>`COALESCE(AVG(${contasReceber.atrasoDias}), 0)`,
+      titulosAtrasados: sql<number>`SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END)`,
+    })
+    .from(contasReceber)
+    .where(whereClause)
+    .groupBy(contasReceber.cidade)
+    .orderBy(sql`SUM(${contasReceber.valor}) DESC`);
+
+  return result;
+}

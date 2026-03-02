@@ -27,4 +27,21 @@
 ## Fase 5: Testar e entregar
 - [x] Escrever testes vitest (11 testes passando)
 - [x] Dashboard carregando dados do banco com sucesso
-- [ ] Checkpoint e entrega
+- [x] Checkpoint e entrega
+
+## Fase 6: Relatório por Região e Estado
+- [x] Analisar dados de região e cidade/estado existentes no banco
+- [x] Criar mapeamento cidade → estado → região no shared/cidadeEstado.ts
+- [x] Criar query SQL getRelatorioPorCidade com filtros de ano e vendedor
+- [x] Criar endpoint tRPC relatorioPorCidade
+- [x] Criar página RelatorioRegiao.tsx com KPI cards, gráficos e tabela
+- [x] Adicionar KPI cards por região clicáveis como filtro
+- [x] Adicionar gráfico de barras faturamento por região
+- [x] Adicionar gráfico de pizza participação por região
+- [x] Adicionar aba Por Estado com gráfico horizontal
+- [x] Adicionar aba Top Cidades com gráfico
+- [x] Adicionar tabela detalhada por estado com ordenação
+- [x] Adicionar botão "Região / Estado" no dashboard principal
+- [x] Adicionar rota /relatorio-regiao no App.tsx
+- [x] Escrever testes vitest para o novo endpoint (13 testes passando)
+- [x] Checkpoint e entrega

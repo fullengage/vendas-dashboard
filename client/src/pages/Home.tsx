@@ -57,6 +57,7 @@ import {
   Upload,
   Calendar,
   Database,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -297,6 +298,12 @@ export default function Home() {
                 <Button variant="outline" size="sm" className="h-8 text-xs">
                   <Calendar className="w-3.5 h-3.5 mr-1.5" />
                   Relatório Mensal
+                </Button>
+              </Link>
+              <Link href="/relatorio-regiao">
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Globe className="w-3.5 h-3.5 mr-1.5" />
+                  Região / Estado
                 </Button>
               </Link>
               <Link href="/upload">

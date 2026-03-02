@@ -65,6 +65,41 @@ vi.mock("./db", () => ({
   ]),
   getTotalRegistros: vi.fn().mockResolvedValue(2557),
   bulkUpsertContas: vi.fn().mockResolvedValue({ inserted: 5, skipped: 0 }),
+  getRelatorioPorCidade: vi.fn().mockResolvedValue([
+    {
+      cidade: "SAO PAULO",
+      totalValor: "3746161.47",
+      totalPago: "3735761.70",
+      totalDesconto: "5000.00",
+      qtdTitulos: 477,
+      qtdClientes: 40,
+      qtdVendedores: 8,
+      mediaAtraso: "1.3",
+      titulosAtrasados: 50,
+    },
+    {
+      cidade: "FORTALEZA",
+      totalValor: "1200000.00",
+      totalPago: "1195000.00",
+      totalDesconto: "2000.00",
+      qtdTitulos: 260,
+      qtdClientes: 5,
+      qtdVendedores: 3,
+      mediaAtraso: "2.5",
+      titulosAtrasados: 30,
+    },
+    {
+      cidade: "CURITIBA",
+      totalValor: "800000.00",
+      totalPago: "800000.00",
+      totalDesconto: "0.00",
+      qtdTitulos: 120,
+      qtdClientes: 10,
+      qtdVendedores: 4,
+      mediaAtraso: "0.0",
+      titulosAtrasados: 0,
+    },
+  ]),
   upsertUser: vi.fn(),
   getUserByOpenId: vi.fn(),
 }));
@@ -216,5 +251,23 @@ describe("contas router", () => {
     expect(record.valorPago).toBe("3456.78");
     expect(record.desconto).toBe("100.50");
     expect(record.atrasoDias).toBe(-1);
+  });
+
+  it("contas.relatorioPorCidade returns city-level aggregation", async () => {
+    const result = await caller.contas.relatorioPorCidade();
+    expect(result).toHaveLength(3);
+    expect(result[0].cidade).toBe("SAO PAULO");
+    expect(result[0].totalValor).toBe("3746161.47");
+    expect(result[0].qtdTitulos).toBe(477);
+    expect(result[0].qtdClientes).toBe(40);
+  });
+
+  it("contas.relatorioPorCidade accepts filters", async () => {
+    const result = await caller.contas.relatorioPorCidade({
+      ano: "2025",
+      vendedor: "JOAO SILVA",
+    });
+    // Should still return mock data (mock doesn't filter)
+    expect(result).toHaveLength(3);
   });
 });

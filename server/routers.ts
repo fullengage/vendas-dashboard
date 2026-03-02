@@ -11,6 +11,7 @@ import {
   getRelatorioMensal,
   getTotalRegistros,
   bulkUpsertContas,
+  getRelatorioPorCidade,
 } from "./db";
 import { InsertContaReceber } from "../drizzle/schema";
 
@@ -89,6 +90,17 @@ export const appRouter = router({
     totalRegistros: publicProcedure.query(async () => {
       return getTotalRegistros();
     }),
+
+    relatorioPorCidade: publicProcedure
+      .input(
+        z.object({
+          vendedor: z.string().optional(),
+          ano: z.string().optional(),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        return getRelatorioPorCidade(input ?? undefined);
+      }),
 
     importCsv: publicProcedure
       .input(

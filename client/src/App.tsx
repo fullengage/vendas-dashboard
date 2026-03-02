@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Relatorio from "./pages/Relatorio";
 import UploadCsv from "./pages/UploadCsv";
+import RelatorioRegiao from "./pages/RelatorioRegiao";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -15,6 +16,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/relatorio"} component={Relatorio} />
       <Route path={"/upload"} component={UploadCsv} />
+      <Route path={"/relatorio-regiao"} component={RelatorioRegiao} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
