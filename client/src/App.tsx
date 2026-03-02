@@ -30,7 +30,7 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <TooltipProvider>
+        <TooltipProvider delayDuration={200}>
           <Toaster />
           <Router />
         </TooltipProvider>
