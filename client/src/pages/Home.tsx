@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   BarChart,
   Bar,
@@ -637,20 +638,21 @@ export default function Home() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-card border border-border rounded-lg overflow-hidden"
         >
-          <div className="p-5 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Desempenho por Vendedor</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {vendedorStats.length} vendedores · Clique no cabeçalho para ordenar
-                </p>
+          <Card className="border border-border/50">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm">Desempenho por Vendedor</CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    {vendedorStats.length} vendedores · ordene e role para ver todos
+                  </CardDescription>
+                </div>
+                <FileText className="w-4 h-4 text-muted-foreground" />
               </div>
-              <FileText className="w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
-          <ScrollArea className="max-h-[600px] border-t border-border">
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ScrollArea className="max-h-[420px] border-t border-border">
             <div className="overflow-x-auto">
               <table className="w-full text-xs border-collapse">
                 <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
@@ -702,8 +704,10 @@ export default function Home() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </ScrollArea>
+              </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Footer */}
