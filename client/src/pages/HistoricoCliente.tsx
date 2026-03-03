@@ -134,9 +134,9 @@ export default function HistoricoCliente() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-50">
+      <header className="shrink-0 border-b border-border bg-card sticky top-0 z-50">
         <div className="container py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -179,7 +179,7 @@ export default function HistoricoCliente() {
         </div>
       </header>
 
-      <main className="container py-6 space-y-6">
+      <main className="flex-1 min-h-0 overflow-y-auto container py-6 space-y-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
           <KPISmall icon={<DollarSign className="w-4 h-4" />} label="Total Faturado" value={formatCurrency(totalValor)} />

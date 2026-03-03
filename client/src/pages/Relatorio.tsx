@@ -124,9 +124,9 @@ export default function Relatorio() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-50">
+      <header className="shrink-0 border-b border-border bg-card sticky top-0 z-50">
         <div className="container py-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export default function Relatorio() {
         </div>
       </header>
 
-      <main className="container py-6 space-y-6">
+      <main className="flex-1 min-h-0 overflow-y-auto container py-6 space-y-6">
         {/* Summary KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border rounded-lg p-4">
