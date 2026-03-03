@@ -1,0 +1,1 @@
+ALTER TABLE `contas_receber` MODIFY COLUMN `desc_valor` varchar(100);

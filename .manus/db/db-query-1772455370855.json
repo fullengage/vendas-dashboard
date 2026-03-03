@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, MIN(dta_vecto) as min_date, MAX(dta_vecto) as max_date FROM contas_receber",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT COUNT(*) as total, MIN(dta_vecto) as min_date, MAX(dta_vecto) as max_date FROM contas_receber",
+  "rows": [
+    {
+      "total": "2557",
+      "min_date": "2025-01-01",
+      "max_date": "2025-12-30"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tmin_date\tmax_date\n2557\t2025-01-01\t2025-12-30\n",
+  "stderr": "",
+  "execution_time_ms": 363
+}
