@@ -232,10 +232,10 @@ export default function HistoricoCliente() {
               <ShoppingCart className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <ScrollArea className="max-h-[500px]">
+          <ScrollArea className="max-h-[600px] border-t border-border">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50 sticky top-0">
+              <table className="w-full text-xs border-collapse">
+                <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
                   <tr>
                     <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Nº NF</th>
                     <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Parcela</th>

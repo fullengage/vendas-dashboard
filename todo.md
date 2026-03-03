@@ -62,3 +62,8 @@
 - [x] Ao clicar no cliente na lista do vendedor, navegar para histórico
 - [x] Testes vitest para os novos endpoints (13 testes passando)
 - [x] Checkpoint e entrega
+
+
+## Fase 9: Melhorias de UX - Scroll Vertical
+- [x] Adicionar scroll vertical nas tabelas de clientes e títulos
+- [x] Definir altura máxima para tabelas e permitir rolagem

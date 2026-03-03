@@ -245,10 +245,10 @@ export default function DetalheVendedor() {
               <Users className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <ScrollArea className="max-h-[600px]">
+          <ScrollArea className="max-h-[600px] border-t border-border">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-muted/50 sticky top-0">
+                <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
                   <tr>
                     <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">#</th>
                     <SortTh field="cliente" label="Cliente" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
@@ -267,7 +267,7 @@ export default function DetalheVendedor() {
                     const freq = frequenciaLabel(c.mesesComCompra, totalMesesPeriodo);
                     const atraso = Math.round(parseFloat(c.mediaAtraso) * 10) / 10;
                     return (
-                      <tr key={c.cliente + i} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                      <tr key={c.cliente + i} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-2.5 px-3 text-muted-foreground">{i + 1}</td>
                         <td className="py-2.5 px-3">
                           <Link href={`/cliente/${encodeURIComponent(c.cliente || "")}?vendedor=${encodeURIComponent(vendedorNome)}`}>
