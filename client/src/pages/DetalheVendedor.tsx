@@ -245,7 +245,7 @@ export default function DetalheVendedor() {
               <Users className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <ScrollArea className="max-h-[600px] border-t border-border">
+          <ScrollArea className="max-h-[500px] border-t border-border">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
