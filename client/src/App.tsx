@@ -8,6 +8,8 @@ import Home from "./pages/Home";
 import Relatorio from "./pages/Relatorio";
 import UploadCsv from "./pages/UploadCsv";
 import RelatorioRegiao from "./pages/RelatorioRegiao";
+import DetalheVendedor from "./pages/DetalheVendedor";
+import HistoricoCliente from "./pages/HistoricoCliente";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -17,6 +19,8 @@ function Router() {
       <Route path={"/relatorio"} component={Relatorio} />
       <Route path={"/upload"} component={UploadCsv} />
       <Route path={"/relatorio-regiao"} component={RelatorioRegiao} />
+      <Route path={"/vendedor/:nome"} component={DetalheVendedor} />
+      <Route path={"/cliente/:nome"} component={HistoricoCliente} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

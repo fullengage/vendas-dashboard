@@ -12,6 +12,9 @@ import {
   getTotalRegistros,
   bulkUpsertContas,
   getRelatorioPorCidade,
+  getDetalheVendedor,
+  getClientesDoVendedor,
+  getHistoricoCliente,
 } from "./db";
 import { InsertContaReceber } from "../drizzle/schema";
 
@@ -96,10 +99,44 @@ export const appRouter = router({
         z.object({
           vendedor: z.string().optional(),
           ano: z.string().optional(),
+          mes: z.string().optional(),
         }).optional()
       )
       .query(async ({ input }) => {
         return getRelatorioPorCidade(input ?? undefined);
+      }),
+
+    detalheVendedor: publicProcedure
+      .input(
+        z.object({
+          vendedor: z.string(),
+          ano: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return getDetalheVendedor(input.vendedor, input.ano);
+      }),
+
+    clientesDoVendedor: publicProcedure
+      .input(
+        z.object({
+          vendedor: z.string(),
+          ano: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return getClientesDoVendedor(input.vendedor, input.ano);
+      }),
+
+    historicoCliente: publicProcedure
+      .input(
+        z.object({
+          cliente: z.string(),
+          vendedor: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return getHistoricoCliente(input.cliente, input.vendedor);
       }),
 
     importCsv: publicProcedure

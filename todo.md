@@ -45,3 +45,20 @@
 - [x] Adicionar rota /relatorio-regiao no App.tsx
 - [x] Escrever testes vitest para o novo endpoint (13 testes passando)
 - [x] Checkpoint e entrega
+
+## Fase 7: Filtro Mensal no Relatório por Região
+- [x] Adicionar parâmetro de mês no endpoint relatorioPorCidade
+- [x] Adicionar Select de mês no header da página RelatorioRegiao
+- [x] Atualizar testes vitest
+- [x] Checkpoint e entrega
+
+## Fase 8: Detalhe do Vendedor e Histórico do Cliente
+- [x] Criar endpoint detalheVendedor (KPIs, evolução mensal, clientes)
+- [x] Criar endpoint historicoCliente (títulos, última compra, frequência)
+- [x] Criar página /vendedor/:nome com desempenho e lista de clientes
+- [x] Mostrar última compra, frequência anual e ticket médio por cliente
+- [x] Criar página /cliente/:nome com histórico completo de compras
+- [x] Ao clicar no vendedor na tabela do dashboard, navegar para detalhe
+- [x] Ao clicar no cliente na lista do vendedor, navegar para histórico
+- [x] Testes vitest para os novos endpoints (13 testes passando)
+- [x] Checkpoint e entrega

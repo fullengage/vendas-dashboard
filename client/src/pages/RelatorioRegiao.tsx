@@ -134,6 +134,7 @@ export default function RelatorioRegiao() {
   const [anoFilter, setAnoFilter] = useState("todos");
   const [vendedorFilter, setVendedorFilter] = useState("todos");
   const [regiaoFilter, setRegiaoFilter] = useState("todos");
+  const [mesFilter, setMesFilter] = useState("todos");
   const [sortField, setSortField] = useState<SortField>("totalValor");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
@@ -143,7 +144,8 @@ export default function RelatorioRegiao() {
   const input = useMemo(() => ({
     vendedor: vendedorFilter !== "todos" ? vendedorFilter : undefined,
     ano: anoFilter !== "todos" ? anoFilter : undefined,
-  }), [vendedorFilter, anoFilter]);
+    mes: mesFilter !== "todos" ? mesFilter : undefined,
+  }), [vendedorFilter, anoFilter, mesFilter]);
 
   const { data: cidadeData, isLoading } = trpc.contas.relatorioPorCidade.useQuery(input);
 
@@ -399,6 +401,27 @@ export default function RelatorioRegiao() {
                 </SelectContent>
               </Select>
 
+              <Select value={mesFilter} onValueChange={setMesFilter}>
+                <SelectTrigger className="w-[150px] h-8 text-xs bg-background">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os meses</SelectItem>
+                  <SelectItem value="01">Janeiro</SelectItem>
+                  <SelectItem value="02">Fevereiro</SelectItem>
+                  <SelectItem value="03">Março</SelectItem>
+                  <SelectItem value="04">Abril</SelectItem>
+                  <SelectItem value="05">Maio</SelectItem>
+                  <SelectItem value="06">Junho</SelectItem>
+                  <SelectItem value="07">Julho</SelectItem>
+                  <SelectItem value="08">Agosto</SelectItem>
+                  <SelectItem value="09">Setembro</SelectItem>
+                  <SelectItem value="10">Outubro</SelectItem>
+                  <SelectItem value="11">Novembro</SelectItem>
+                  <SelectItem value="12">Dezembro</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Select value={regiaoFilter} onValueChange={setRegiaoFilter}>
                 <SelectTrigger className="w-[180px] h-8 text-xs bg-background">
                   <SelectValue placeholder="Região" />
@@ -411,12 +434,13 @@ export default function RelatorioRegiao() {
                 </SelectContent>
               </Select>
 
-              {(anoFilter !== "todos" || vendedorFilter !== "todos" || regiaoFilter !== "todos") && (
+              {(anoFilter !== "todos" || vendedorFilter !== "todos" || regiaoFilter !== "todos" || mesFilter !== "todos") && (
                 <button
                   onClick={() => {
                     setAnoFilter("todos");
                     setVendedorFilter("todos");
                     setRegiaoFilter("todos");
+                    setMesFilter("todos");
                   }}
                   className="text-xs text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
                 >

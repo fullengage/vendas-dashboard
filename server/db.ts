@@ -254,23 +254,11 @@ export async function getRelatorioMensal(filters?: {
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const result = await db
-    .select({
-      mes: sql<string>`DATE_FORMAT(${contasReceber.dtaVecto}, '%Y-%m')`,
-      totalValor: sql<string>`COALESCE(SUM(${contasReceber.valor}), 0)`,
-      totalPago: sql<string>`COALESCE(SUM(${contasReceber.valorPago}), 0)`,
-      totalDesconto: sql<string>`COALESCE(SUM(${contasReceber.desconto}), 0)`,
-      qtdTitulos: sql<number>`COUNT(*)`,
-      qtdClientes: sql<number>`COUNT(DISTINCT ${contasReceber.razaoCli})`,
-      mediaAtraso: sql<string>`COALESCE(AVG(${contasReceber.atrasoDias}), 0)`,
-      titulosAtrasados: sql<number>`SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END)`,
-    })
-    .from(contasReceber)
-    .where(whereClause)
-    .groupBy(sql`DATE_FORMAT(${contasReceber.dtaVecto}, '%Y-%m')`)
-    .orderBy(sql`DATE_FORMAT(${contasReceber.dtaVecto}, '%Y-%m')`);
-
-  return result;
+  const whereSQL = whereClause ? sql`WHERE ${whereClause}` : sql``;
+  const rawResult = await db.execute(
+    sql`SELECT SUBSTRING(${contasReceber.dtaVecto}, 1, 7) as mes, COALESCE(SUM(${contasReceber.valor}), 0) as totalValor, COALESCE(SUM(${contasReceber.valorPago}), 0) as totalPago, COALESCE(SUM(${contasReceber.desconto}), 0) as totalDesconto, COUNT(*) as qtdTitulos, COUNT(DISTINCT ${contasReceber.razaoCli}) as qtdClientes, COALESCE(AVG(${contasReceber.atrasoDias}), 0) as mediaAtraso, SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END) as titulosAtrasados FROM ${contasReceber} ${whereSQL} GROUP BY mes ORDER BY mes`
+  );
+  return (rawResult as any)[0] || [];
 }
 
 export async function getTotalRegistros() {
@@ -284,6 +272,7 @@ export async function getTotalRegistros() {
 export async function getRelatorioPorCidade(filters?: {
   ano?: string;
   vendedor?: string;
+  mes?: string;
 }) {
   const db = await getDb();
   if (!db) return [];
@@ -297,6 +286,9 @@ export async function getRelatorioPorCidade(filters?: {
   if (filters?.ano) {
     conditions.push(sql`${contasReceber.dtaVecto} >= ${filters.ano + '-01-01'}`);
     conditions.push(sql`${contasReceber.dtaVecto} <= ${filters.ano + '-12-31'}`);
+  }
+  if (filters?.mes) {
+    conditions.push(sql`MONTH(${contasReceber.dtaVecto}) = ${parseInt(filters.mes, 10)}`);
   }
 
   const whereClause = and(...conditions);
@@ -319,4 +311,135 @@ export async function getRelatorioPorCidade(filters?: {
     .orderBy(sql`SUM(${contasReceber.valor}) DESC`);
 
   return result;
+}
+
+
+// ── Detalhe do Vendedor ──────────────────────────────────────────────
+export async function getDetalheVendedor(vendedor: string, ano?: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const conditions = [eq(contasReceber.vendedor, vendedor)];
+  if (ano) {
+    conditions.push(sql`${contasReceber.dtaVecto} >= ${ano + '-01-01'}`);
+    conditions.push(sql`${contasReceber.dtaVecto} <= ${ano + '-12-31'}`);
+  }
+
+  // KPIs gerais do vendedor
+  const [kpis] = await db
+    .select({
+      totalValor: sql<string>`COALESCE(SUM(${contasReceber.valor}), 0)`,
+      totalPago: sql<string>`COALESCE(SUM(${contasReceber.valorPago}), 0)`,
+      totalDesconto: sql<string>`COALESCE(SUM(${contasReceber.desconto}), 0)`,
+      qtdTitulos: sql<number>`COUNT(*)`,
+      qtdClientes: sql<number>`COUNT(DISTINCT ${contasReceber.razaoCli})`,
+      qtdCidades: sql<number>`COUNT(DISTINCT ${contasReceber.cidade})`,
+      mediaAtraso: sql<string>`COALESCE(AVG(${contasReceber.atrasoDias}), 0)`,
+      titulosAtrasados: sql<number>`SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END)`,
+    })
+    .from(contasReceber)
+    .where(and(...conditions));
+
+  // Evolução mensal do vendedor - usar sql.raw para evitar backtick duplo no GROUP BY
+  const evolucaoRaw = await db.execute(
+    sql`SELECT SUBSTRING(${contasReceber.dtaVecto}, 1, 7) as mes, COALESCE(SUM(${contasReceber.valor}), 0) as totalValor, COALESCE(SUM(${contasReceber.valorPago}), 0) as totalPago, COUNT(*) as qtdTitulos FROM ${contasReceber} WHERE ${and(...conditions)} GROUP BY mes ORDER BY mes`
+  );
+  const evolucao = (evolucaoRaw as any)[0] || [];
+
+  return { kpis, evolucao };
+}
+
+// ── Clientes do Vendedor ─────────────────────────────────────────────
+export async function getClientesDoVendedor(vendedor: string, ano?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [
+    eq(contasReceber.vendedor, vendedor),
+    sql`${contasReceber.razaoCli} IS NOT NULL AND ${contasReceber.razaoCli} != ''`,
+  ];
+  if (ano) {
+    conditions.push(sql`${contasReceber.dtaVecto} >= ${ano + '-01-01'}`);
+    conditions.push(sql`${contasReceber.dtaVecto} <= ${ano + '-12-31'}`);
+  }
+
+  const result = await db
+    .select({
+      cliente: contasReceber.razaoCli,
+      cidade: contasReceber.cidade,
+      totalValor: sql<string>`COALESCE(SUM(${contasReceber.valor}), 0)`,
+      totalPago: sql<string>`COALESCE(SUM(${contasReceber.valorPago}), 0)`,
+      qtdTitulos: sql<number>`COUNT(*)`,
+      ultimaCompra: sql<string>`MAX(${contasReceber.dtaVecto})`,
+      primeiraCompra: sql<string>`MIN(${contasReceber.dtaVecto})`,
+      mesesComCompra: sql<number>`COUNT(DISTINCT SUBSTRING(${contasReceber.dtaVecto}, 1, 7))`,
+      ticketMedio: sql<string>`COALESCE(AVG(${contasReceber.valor}), 0)`,
+      mediaAtraso: sql<string>`COALESCE(AVG(${contasReceber.atrasoDias}), 0)`,
+      titulosAtrasados: sql<number>`SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END)`,
+    })
+    .from(contasReceber)
+    .where(and(...conditions))
+    .groupBy(contasReceber.razaoCli, contasReceber.cidade)
+    .orderBy(sql`SUM(${contasReceber.valor}) DESC`);
+
+  return result;
+}
+
+// ── Histórico do Cliente ─────────────────────────────────────────────
+export async function getHistoricoCliente(cliente: string, vendedor?: string) {
+  const db = await getDb();
+  if (!db) return { resumo: null, titulos: [], evolucaoMensal: [] };
+
+  const conditions = [eq(contasReceber.razaoCli, cliente)];
+  if (vendedor) {
+    conditions.push(eq(contasReceber.vendedor, vendedor));
+  }
+
+  // Resumo geral do cliente
+  const [resumo] = await db
+    .select({
+      totalValor: sql<string>`COALESCE(SUM(${contasReceber.valor}), 0)`,
+      totalPago: sql<string>`COALESCE(SUM(${contasReceber.valorPago}), 0)`,
+      qtdTitulos: sql<number>`COUNT(*)`,
+      ultimaCompra: sql<string>`MAX(${contasReceber.dtaVecto})`,
+      primeiraCompra: sql<string>`MIN(${contasReceber.dtaVecto})`,
+      mesesComCompra: sql<number>`COUNT(DISTINCT SUBSTRING(${contasReceber.dtaVecto}, 1, 7))`,
+      ticketMedio: sql<string>`COALESCE(AVG(${contasReceber.valor}), 0)`,
+      mediaAtraso: sql<string>`COALESCE(AVG(${contasReceber.atrasoDias}), 0)`,
+      titulosAtrasados: sql<number>`SUM(CASE WHEN ${contasReceber.atrasoDias} > 0 THEN 1 ELSE 0 END)`,
+      cidade: contasReceber.cidade,
+      vendedor: contasReceber.vendedor,
+    })
+    .from(contasReceber)
+    .where(and(...conditions))
+    .groupBy(contasReceber.cidade, contasReceber.vendedor);
+
+  // Todos os títulos do cliente (histórico completo)
+  const titulos = await db
+    .select({
+      id: contasReceber.id,
+      cont: contasReceber.cont,
+      parcela: contasReceber.parcela,
+      numNf: contasReceber.numNf,
+      situacao: contasReceber.situacao,
+      dtaVecto: contasReceber.dtaVecto,
+      valor: contasReceber.valor,
+      dtaPagto: contasReceber.dtaPagto,
+      valorPago: contasReceber.valorPago,
+      desconto: contasReceber.desconto,
+      descricao: contasReceber.descricao,
+      atrasoDias: contasReceber.atrasoDias,
+      vendedor: contasReceber.vendedor,
+    })
+    .from(contasReceber)
+    .where(and(...conditions))
+    .orderBy(sql`${contasReceber.dtaVecto} DESC`);
+
+  // Evolução mensal do cliente
+  const evolucaoRaw = await db.execute(
+    sql`SELECT SUBSTRING(${contasReceber.dtaVecto}, 1, 7) as mes, COALESCE(SUM(${contasReceber.valor}), 0) as totalValor, COALESCE(SUM(${contasReceber.valorPago}), 0) as totalPago, COUNT(*) as qtdTitulos FROM ${contasReceber} WHERE ${and(...conditions)} GROUP BY mes ORDER BY mes`
+  );
+  const evolucaoMensal = (evolucaoRaw as any)[0] || [];
+
+  return { resumo, titulos, evolucaoMensal };
 }

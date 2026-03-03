@@ -671,7 +671,11 @@ export default function Home() {
                   {sortedStats.map((v, i) => (
                     <tr key={v.nome} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 px-4 text-muted-foreground">{i + 1}</td>
-                      <td className="py-2.5 px-4 font-medium text-foreground max-w-[200px] truncate" title={v.nome}>{v.nome}</td>
+                      <td className="py-2.5 px-4 font-medium max-w-[200px] truncate" title={v.nome}>
+                        <Link href={`/vendedor/${encodeURIComponent(v.nome)}`}>
+                          <span className="text-primary hover:underline cursor-pointer">{v.nome}</span>
+                        </Link>
+                      </td>
                       <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalValor)}</td>
                       <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalPago)}</td>
                       <td className="py-2.5 px-4 text-right">

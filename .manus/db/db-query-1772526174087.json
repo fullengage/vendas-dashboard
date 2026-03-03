@@ -1,0 +1,88 @@
+{
+  "query": "SELECT DISTINCT vendedor FROM contas_receber ORDER BY vendedor LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT DISTINCT vendedor FROM contas_receber ORDER BY vendedor LIMIT 30;",
+  "rows": [
+    {
+      "vendedor": "(NÃO USAR) W.F COMERCIO E REPRESENTAÇÃO"
+    },
+    {
+      "vendedor": "ALEXANDRE CATTANEO"
+    },
+    {
+      "vendedor": "ANDREA DE ARAUJO SANTOS"
+    },
+    {
+      "vendedor": "ANDREA E AGILZO"
+    },
+    {
+      "vendedor": "ANTONIO ALENCAR MACHADO FILHO"
+    },
+    {
+      "vendedor": "ARETHUSA ZAGABRIA RICARDO"
+    },
+    {
+      "vendedor": "CAMILA"
+    },
+    {
+      "vendedor": "CARLOS HENRIQUE PELIZZON"
+    },
+    {
+      "vendedor": "CONFIANÇA EMBALAGENS"
+    },
+    {
+      "vendedor": "FABIO E SANTOS COMERCIO E REPRESENTAÇOES"
+    },
+    {
+      "vendedor": "GM FLEX LTDA - ME"
+    },
+    {
+      "vendedor": "IVALDO LEANDRO DIAS"
+    },
+    {
+      "vendedor": "JULIANA APARECIDA RODRIGUES SIMOES"
+    },
+    {
+      "vendedor": "LILIANE"
+    },
+    {
+      "vendedor": "MARCO MOYA"
+    },
+    {
+      "vendedor": "OELLO REPRESENTAÇÕES"
+    },
+    {
+      "vendedor": "OLIVE D´ ORO REPRESENTACOES COMERCIAIS L"
+    },
+    {
+      "vendedor": "PACK CIA REPRESENTACOES"
+    },
+    {
+      "vendedor": "PAULO ALAOR DE CARVALHO"
+    },
+    {
+      "vendedor": "PEDRO A CARDOSO"
+    },
+    {
+      "vendedor": "ROSIANE CAVALINI DE OLIVEIRA"
+    },
+    {
+      "vendedor": "SERGIO ROBERTO APARECIDO BONATTI"
+    },
+    {
+      "vendedor": "SIDINEI"
+    },
+    {
+      "vendedor": "UNIX PACK EMBALAGENS FLEXIVEIS"
+    },
+    {
+      "vendedor": "VIDEIRA PACK ALIMENTOS LTDA"
+    },
+    {
+      "vendedor": "W.F COMERCIO E REPRESENTACAO DE EMBALAGE"
+    }
+  ],
+  "messages": [],
+  "stdout": "vendedor\n(NÃO USAR) W.F COMERCIO E REPRESENTAÇÃO\nALEXANDRE CATTANEO\nANDREA DE ARAUJO SANTOS\nANDREA E AGILZO\nANTONIO ALENCAR MACHADO FILHO\nARETHUSA ZAGABRIA RICARDO\nCAMILA\nCARLOS HENRIQUE PELIZZON\nCONFIANÇA EMBALAGENS\nFABIO E SANTOS COMERCIO E REPRESENTAÇOES\nGM FLEX LTDA - ME\nIVALDO LEANDRO DIAS\nJULIANA APARECIDA RODRIGUES SIMOES\nLILIANE\nMARCO MOYA\nOELLO REPRESENTAÇÕES\nOLIVE D´ ORO REPRESENTACOES COMERCIAIS L\nPACK CIA REPRESENTACOES\nPAULO ALAOR DE CARVALHO\nPEDRO A CARDOSO\nROSIANE CAVALINI DE OLIVEIRA\nSERGIO ROBERTO APARECIDO BONATTI\nSIDINEI\nUNIX PACK EMBALAGENS FLEXIVEIS\nVIDEIRA PACK ALIMENTOS LTDA\nW.F COMERCIO E REPRESENTACAO DE EMBALAGE\n",
+  "stderr": "",
+  "execution_time_ms": 385
+}
