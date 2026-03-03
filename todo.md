@@ -67,3 +67,10 @@
 ## Fase 9: Melhorias de UX - Scroll Vertical
 - [x] Adicionar scroll vertical nas tabelas de clientes e títulos
 - [x] Definir altura máxima para tabelas e permitir rolagem
+
+
+## Fase 10: Scroll Vertical em Todas as Tabelas
+- [x] Adicionar scroll vertical na tabela de Relatório Mensal (Detalhamento Mensal)
+- [x] Adicionar scroll vertical na tabela de Relatório por Região (Detalhamento por Estado)
+- [x] Aumentar altura máxima das tabelas para 600px
+- [x] Adicionar z-index sticky no header para manter visível durante scroll

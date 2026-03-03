@@ -245,10 +245,10 @@ export default function Relatorio() {
             <h3 className="text-sm font-semibold text-foreground">Detalhamento Mensal</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Valores consolidados por mês</p>
           </div>
-          <ScrollArea className="max-h-[600px]">
+          <ScrollArea className="max-h-[600px] border-t border-border">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50 sticky top-0">
+              <table className="w-full text-xs border-collapse">
+                <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
                   <tr>
                     <th className="text-left py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider">Mês</th>
                     <th className="text-right py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider">Faturado</th>
@@ -265,7 +265,7 @@ export default function Relatorio() {
                     const taxa = r.totalValor > 0 ? (r.totalPago / r.totalValor) * 100 : 0;
                     const ticketMedio = r.qtdTitulos > 0 ? r.totalValor / r.qtdTitulos : 0;
                     return (
-                      <tr key={r.mes} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                      <tr key={r.mes} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-2.5 px-4 font-medium text-foreground">{r.mesNome}</td>
                         <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(r.totalValor)}</td>
                         <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(r.totalPago)}</td>
