@@ -166,7 +166,7 @@ export default function DetalheVendedor() {
   const mediaAtraso = Math.round(parseFloat(kpis?.mediaAtraso || "0") * 10) / 10;
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       {/* Header */}
       <header className="shrink-0 border-b border-border bg-card sticky top-0 z-50">
         <div className="container py-4">
@@ -205,7 +205,8 @@ export default function DetalheVendedor() {
         </div>
       </header>
 
-      <main className="flex-1 min-h-0 overflow-y-auto container py-6 space-y-6">
+      <main className="flex-1 min-h-0 overflow-y-auto">
+        <div className="container py-6 space-y-6">
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <KPISmall icon={<DollarSign className="w-4 h-4" />} label="Faturado" value={formatCurrency(totalValor)} />
@@ -318,6 +319,7 @@ export default function DetalheVendedor() {
             UNIX PACK Embalagens Flexíveis — Desempenho do Vendedor
           </p>
         </footer>
+        </div>
       </main>
     </div>
   );

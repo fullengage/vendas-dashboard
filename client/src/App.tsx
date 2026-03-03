@@ -42,9 +42,7 @@ function App() {
       >
         <TooltipProvider delayDuration={200}>
           <Toaster />
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            <Router />
-          </div>
+          <Router />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
