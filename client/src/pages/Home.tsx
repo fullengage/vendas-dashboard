@@ -650,10 +650,10 @@ export default function Home() {
               <FileText className="w-4 h-4 text-muted-foreground" />
             </div>
           </div>
-          <ScrollArea className="max-h-[500px]">
+          <ScrollArea className="max-h-[600px] border-t border-border">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/50 sticky top-0">
+              <table className="w-full text-xs border-collapse">
+                <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
                   <tr>
                     <th className="text-left py-2.5 px-4 font-semibold text-muted-foreground uppercase tracking-wider">#</th>
                     <SortHeader field="nome" label="Vendedor" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
@@ -669,7 +669,7 @@ export default function Home() {
                 </thead>
                 <tbody>
                   {sortedStats.map((v, i) => (
-                    <tr key={v.nome} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                    <tr key={v.nome} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 px-4 text-muted-foreground">{i + 1}</td>
                       <td className="py-2.5 px-4 font-medium max-w-[200px] truncate" title={v.nome}>
                         <Link href={`/vendedor/${encodeURIComponent(v.nome)}`}>
