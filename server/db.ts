@@ -443,3 +443,46 @@ export async function getHistoricoCliente(cliente: string, vendedor?: string) {
 
   return { resumo, titulos, evolucaoMensal };
 }
+
+// Clientes inativos (6+ meses sem comprar)
+export async function getClientesInativos(mesesInatividade: number = 6) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const dataLimite = new Date();
+  dataLimite.setMonth(dataLimite.getMonth() - mesesInatividade);
+  const dataLimiteStr = dataLimite.toISOString().split('T')[0];
+
+  // Subquery para pegar vendedor e cidade da última compra
+  const result = await db.execute(
+    sql`
+      SELECT 
+        c.cliente,
+        c.vendedor,
+        c.cidade,
+        c.ultimaCompra,
+        c.totalValor,
+        c.totalPago,
+        c.qtdTitulos,
+        DATEDIFF(CURDATE(), c.ultimaCompra) as diasSemComprar
+      FROM (
+        SELECT 
+          ${contasReceber.razaoCli} as cliente,
+          SUBSTRING_INDEX(GROUP_CONCAT(${contasReceber.vendedor} ORDER BY ${contasReceber.dtaEmissao} DESC), ',', 1) as vendedor,
+          SUBSTRING_INDEX(GROUP_CONCAT(${contasReceber.cidade} ORDER BY ${contasReceber.dtaEmissao} DESC), ',', 1) as cidade,
+          MAX(${contasReceber.dtaEmissao}) as ultimaCompra,
+          COALESCE(SUM(${contasReceber.valor}), 0) as totalValor,
+          COALESCE(SUM(${contasReceber.valorPago}), 0) as totalPago,
+          COUNT(*) as qtdTitulos
+        FROM ${contasReceber}
+        WHERE ${contasReceber.razaoCli} IS NOT NULL 
+          AND ${contasReceber.dtaEmissao} IS NOT NULL
+        GROUP BY ${contasReceber.razaoCli}
+        HAVING MAX(${contasReceber.dtaEmissao}) < ${dataLimiteStr}
+      ) c
+      ORDER BY diasSemComprar DESC
+    `
+  );
+
+  return (result as any)[0] || [];
+}

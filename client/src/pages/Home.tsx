@@ -332,6 +332,12 @@ export default function Home() {
                   Região / Estado
                 </Button>
               </Link>
+              <Link href="/clientes-inativos">
+                <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                  Clientes Inativos
+                </Button>
+              </Link>
               <Link href="/upload">
                 <Button variant="outline" size="sm" className="h-8 text-xs">
                   <Upload className="w-3.5 h-3.5 mr-1.5" />

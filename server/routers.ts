@@ -15,6 +15,7 @@ import {
   getDetalheVendedor,
   getClientesDoVendedor,
   getHistoricoCliente,
+  getClientesInativos,
 } from "./db";
 import { InsertContaReceber } from "../drizzle/schema";
 
@@ -137,6 +138,16 @@ export const appRouter = router({
       )
       .query(async ({ input }) => {
         return getHistoricoCliente(input.cliente, input.vendedor);
+      }),
+
+    clientesInativos: publicProcedure
+      .input(
+        z.object({
+          mesesInatividade: z.number().optional().default(6),
+        }).optional()
+      )
+      .query(async ({ input }) => {
+        return getClientesInativos(input?.mesesInatividade ?? 6);
       }),
 
     importCsv: publicProcedure
