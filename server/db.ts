@@ -1,4 +1,4 @@
-import { eq, sql, and, gte, lte, desc, asc, count, sum } from "drizzle-orm";
+import { eq, sql, and, gte, lte, desc, asc, count, sum, or, isNull, isNotNull, ne, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, contasReceber, InsertContaReceber, importBatches, importErrors, InsertImportBatch, InsertImportError, orders, orderItems, InsertOrder, InsertOrderItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -840,4 +840,172 @@ export async function getDiasSemComprarCliente(codPessoa: string): Promise<{
     ultimaCompraFaturada,
     temComprasFaturadas: true,
   };
+}
+
+
+/**
+ * Listar todos os pedidos com filtros opcionais
+ * Pode filtrar por cliente, período, status e vendedor
+ */
+export async function listaPedidosComFiltros(filtros?: {
+  codPessoa?: string;
+  codUsuario?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  isFaturado?: boolean;
+  limite?: number;
+  offset?: number;
+}): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let query = db
+    .select({
+      id: orders.id,
+      codPedido: orders.codPedido,
+      codPessoa: orders.codPessoa,
+      dtaEmissao: orders.dtaEmissao,
+      dtaFaturamento: orders.dtaFaturamento,
+      valorTotal: orders.valorTotal,
+      valorFinal: orders.valorFinal,
+      situacao: orders.situacao,
+      descSit: orders.descSit,
+      codStatus: orders.codStatus,
+      codUsuario: orders.codUsuario,
+      isFaturado: sql<boolean>`CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN 1 ELSE 0 END`,
+    })
+    .from(orders);
+
+  // Aplicar filtros
+  const conditions = [];
+
+  if (filtros?.codPessoa) {
+    conditions.push(eq(orders.codPessoa, filtros.codPessoa));
+  }
+
+  if (filtros?.codUsuario) {
+    conditions.push(eq(orders.codUsuario, filtros.codUsuario));
+  }
+
+  if (filtros?.dataInicio) {
+    conditions.push(gte(orders.dtaEmissao, filtros.dataInicio));
+  }
+
+  if (filtros?.dataFim) {
+    conditions.push(lte(orders.dtaEmissao, filtros.dataFim));
+  }
+
+  if (filtros?.isFaturado !== undefined) {
+    if (filtros.isFaturado) {
+      conditions.push(and(
+        isNotNull(orders.dtaFaturamento),
+        ne(orders.dtaFaturamento, "")
+      ));
+    } else {
+      conditions.push(or(
+        isNull(orders.dtaFaturamento),
+        eq(orders.dtaFaturamento, "")
+      ));
+    }
+  }
+
+  if (conditions.length > 0) {
+    query = (query as any).where(and(...conditions));
+  }
+
+  query = (query as any).orderBy(desc(orders.dtaEmissao));
+
+  if (filtros?.limite) {
+    query = (query as any).limit(filtros.limite);
+  }
+
+  if (filtros?.offset) {
+    query = (query as any).offset(filtros.offset);
+  }
+
+  return await (query as any);
+}
+
+/**
+ * Contar total de pedidos com filtros
+ */
+export async function contaPedidosComFiltros(filtros?: {
+  codPessoa?: string;
+  codUsuario?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  isFaturado?: boolean;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let query = db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(orders);
+
+  const conditions = [];
+
+  if (filtros?.codPessoa) {
+    conditions.push(eq(orders.codPessoa, filtros.codPessoa));
+  }
+
+  if (filtros?.codUsuario) {
+    conditions.push(eq(orders.codUsuario, filtros.codUsuario));
+  }
+
+  if (filtros?.dataInicio) {
+    conditions.push(gte(orders.dtaEmissao, filtros.dataInicio));
+  }
+
+  if (filtros?.dataFim) {
+    conditions.push(lte(orders.dtaEmissao, filtros.dataFim));
+  }
+
+  if (filtros?.isFaturado !== undefined) {
+    if (filtros.isFaturado) {
+      conditions.push(and(
+        isNotNull(orders.dtaFaturamento),
+        ne(orders.dtaFaturamento, "")
+      ));
+    } else {
+      conditions.push(or(
+        isNull(orders.dtaFaturamento),
+        eq(orders.dtaFaturamento, "")
+      ));
+    }
+  }
+
+  if (conditions.length > 0) {
+    query = (query as any).where(and(...conditions));
+  }
+
+  const result = await (query as any);
+  return result[0]?.count || 0;
+}
+
+/**
+ * Buscar pedidos por número de pedido (codPedido)
+ */
+export async function buscaPedidosPorNumero(codPedido: string): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select({
+      id: orders.id,
+      codPedido: orders.codPedido,
+      codPessoa: orders.codPessoa,
+      dtaEmissao: orders.dtaEmissao,
+      dtaFaturamento: orders.dtaFaturamento,
+      valorTotal: orders.valorTotal,
+      valorFinal: orders.valorFinal,
+      situacao: orders.situacao,
+      descSit: orders.descSit,
+      codStatus: orders.codStatus,
+      codUsuario: orders.codUsuario,
+      isFaturado: sql<boolean>`CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN 1 ELSE 0 END`,
+    })
+    .from(orders)
+    .where(like(orders.codPedido, `%${codPedido}%`))
+    .orderBy(desc(orders.dtaEmissao));
 }

@@ -11,6 +11,7 @@ import RelatorioRegiao from "./pages/RelatorioRegiao";
 import DetalheVendedor from "./pages/DetalheVendedor";
 import HistoricoCliente from "./pages/HistoricoCliente";
 import ClientesInativos from "./pages/ClientesInativos";
+import { PedidosHistorico } from "./pages/PedidosHistorico";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,10 +20,11 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/relatorio"} component={Relatorio} />
       <Route path={"/upload"} component={UploadCsv} />
-      <Route path={"/relatorio-regiao"} component={RelatorioRegiao} />
+      <Route path={"relatorio-regiao"} component={RelatorioRegiao} />
       <Route path={"/vendedor/:nome"} component={DetalheVendedor} />
       <Route path={"/cliente/:nome"} component={HistoricoCliente} />
       <Route path="/clientes-inativos" component={ClientesInativos} />
+      <Route path="/pedidos" component={PedidosHistorico} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

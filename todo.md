@@ -106,3 +106,14 @@
 - [x] Melhorar getProdutosCompradosCliente para usar desc_saida corretamente
 - [x] Testar exibição de produtos no modal
 - [x] Escrever testes vitest para novas funções (27 testes passando)
+
+
+## Fase 14: Nova Página de Histórico de Pedidos e Produtos
+- [x] Criar função backend para listar todos os pedidos com filtros (cliente, período, status)
+- [x] Criar função backend para listar itens de um pedido
+- [x] Implementar página PedidosHistorico.tsx com tabela de pedidos
+- [x] Adicionar filtros: cliente, período, status, vendedor
+- [x] Adicionar busca por número de pedido
+- [x] Implementar modal de detalhes com itens do pedido
+- [x] Adicionar paginação
+- [x] Escrever testes vitest para novos endpoints (27 testes passando)

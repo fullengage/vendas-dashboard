@@ -12,6 +12,9 @@ import {
   getProdutosCompradosCliente,
   getUltimoPedidoCliente,
   getDiasSemComprarCliente,
+  listaPedidosComFiltros,
+  contaPedidosComFiltros,
+  buscaPedidosPorNumero,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 
@@ -28,18 +31,13 @@ export const pedidosRouter = router({
         const fileHash = calculateFileHash(input.content);
         const { pedidos, errors } = parsePedidosCSV(input.content);
         
-        // Criar lote de importacao
         const batchId = await createImportBatch(input.filename, fileHash, pedidos.length);
-        
-        // Importar pedidos
         const result = await importPedidos(pedidos, batchId);
         
-        // Registrar erros
         for (const error of errors) {
           await logImportError(batchId, error.rowNumber, error.error, error.rawRow);
         }
         
-        // Atualizar status do lote
         await updateImportBatch(batchId, result.created + result.updated, errors.length, "completed");
         
         return {
@@ -110,5 +108,37 @@ export const pedidosRouter = router({
     .input(z.object({ codPessoa: z.string() }))
     .query(async ({ input }) => {
       return getDiasSemComprarCliente(input.codPessoa);
+    }),
+  
+  listaComFiltros: publicProcedure
+    .input(z.object({
+      codPessoa: z.string().optional(),
+      codUsuario: z.string().optional(),
+      dataInicio: z.string().optional(),
+      dataFim: z.string().optional(),
+      isFaturado: z.boolean().optional(),
+      limite: z.number().optional(),
+      offset: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      return listaPedidosComFiltros(input);
+    }),
+  
+  contaComFiltros: publicProcedure
+    .input(z.object({
+      codPessoa: z.string().optional(),
+      codUsuario: z.string().optional(),
+      dataInicio: z.string().optional(),
+      dataFim: z.string().optional(),
+      isFaturado: z.boolean().optional(),
+    }))
+    .query(async ({ input }) => {
+      return contaPedidosComFiltros(input);
+    }),
+  
+  buscaPorNumero: publicProcedure
+    .input(z.object({ codPedido: z.string() }))
+    .query(async ({ input }) => {
+      return buscaPedidosPorNumero(input.codPedido);
     }),
 });
