@@ -4,7 +4,8 @@ import { createHash } from "crypto";
  * Parser para CSV de Pedidos de Venda x Produtos
  * - Encoding: ISO-8859-1
  * - Separador: ;
- * - Pula 3 primeiras linhas (cabeçalho de relatório)
+ * - Header está na linha 3 (índice 3)
+ * - Colunas principais: COD_PEDIDO, COD_PESSOA, COD_USUARIO, DTA_EMISSAO, VALOR_PEDIDO_TOTAL, etc.
  */
 
 export interface PedidoRow {
@@ -77,12 +78,20 @@ export function parsePedidosCSV(content: string): {
   const pedidos: ParsedPedido[] = [];
   const errors: Array<{ rowNumber: number; error: string; rawRow: string }> = [];
 
-  // Pular 3 primeiras linhas (cabeçalho de relatório)
-  const headerLine = lines[3];
-  if (!headerLine) {
-    return { pedidos: [], errors: [{ rowNumber: 0, error: "Header not found", rawRow: "" }] };
+  // Encontrar a linha do header (procura por "COD_PEDIDO")
+  let headerLineIndex = -1;
+  for (let i = 0; i < Math.min(10, lines.length); i++) {
+    if (lines[i].includes("COD_PEDIDO")) {
+      headerLineIndex = i;
+      break;
+    }
   }
 
+  if (headerLineIndex === -1) {
+    return { pedidos: [], errors: [{ rowNumber: 0, error: "Header not found (COD_PEDIDO column missing)", rawRow: "" }] };
+  }
+
+  const headerLine = lines[headerLineIndex];
   const headers = headerLine.split(";");
   const headerMap = new Map<string, number>();
   headers.forEach((h, i) => {
@@ -92,7 +101,7 @@ export function parsePedidosCSV(content: string): {
   // Agrupar linhas por COD_PEDIDO
   const pedidoMap = new Map<string, PedidoRow[]>();
 
-  for (let i = 4; i < lines.length; i++) {
+  for (let i = headerLineIndex + 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
@@ -173,9 +182,9 @@ export function parsePedidosCSV(content: string): {
         dtaEmissao: parseDate(firstRow["DTA_EMISSAO"]?.trim() || ""),
         dtaEntrega: parseDate(firstRow["DTA_ENTREGA"]?.trim() || ""),
         dtaFaturamento: parseDate(firstRow["DTA_FATURAMENTO"]?.trim() || ""),
-        valorTotal: totalPedido,
+        valorTotal: parseNumber(firstRow["VALOR_PEDIDO_TOTAL"] || "0"),
         desconto: descountoPedido,
-        valorFinal: totalPedido - descountoPedido,
+        valorFinal: parseNumber(firstRow["VALOR_PEDIDO_TOTAL"] || "0") - descountoPedido,
         situacao: firstRow["SITUACAO"]?.trim() || "NORMAL",
         descSit: firstRow["DESC_SIT"]?.trim() || "",
         codStatus: firstRow["COD_STATUS"]?.trim() || "",
