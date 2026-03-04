@@ -1,0 +1,28 @@
+{
+  "query": "SELECT COUNT(*) as total_pedidos FROM orders; SELECT COUNT(*) as total_itens FROM order_items; SELECT * FROM import_batches ORDER BY createdAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT COUNT(*) as total_pedidos FROM orders; SELECT COUNT(*) as total_itens FROM order_items; SELECT * FROM import_batches ORDER BY createdAt DESC;",
+  "rows": [
+    {
+      "total_pedidos": "608"
+    },
+    {
+      "total_pedidos": "total_itens"
+    },
+    {
+      "total_pedidos": "179"
+    },
+    {
+      "total_pedidos": "id\tfilename\tfile_hash\tstatus\ttotal_rows\tsuccess_rows\terror_rows\tcreatedAt\tupdatedAt"
+    },
+    {
+      "total_pedidos": "4\ttest.csv\ttesthash123\tpending\t0\t0\t0\t2026-03-04 14:27:24\t2026-03-04 14:27:24"
+    },
+    {
+      "total_pedidos": "1\tPedidosdeVendaxProdutos-Periodo-01-01-2025a01-12-2025-Situacoesselecionadas-Aberto.csv\t96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7\tprocessing\t469\t0\t0\t2026-03-04 14:24:28\t2026-03-04 14:24:28"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_pedidos\n608\ntotal_itens\n179\nid\tfilename\tfile_hash\tstatus\ttotal_rows\tsuccess_rows\terror_rows\tcreatedAt\tupdatedAt\n4\ttest.csv\ttesthash123\tpending\t0\t0\t0\t2026-03-04 14:27:24\t2026-03-04 14:27:24\n1\tPedidosdeVendaxProdutos-Periodo-01-01-2025a01-12-2025-Situacoesselecionadas-Aberto.csv\t96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7\tprocessing\t469\t0\t0\t2026-03-04 14:24:28\t2026-03-04 14:24:28\n",
+  "stderr": "",
+  "execution_time_ms": 456
+}

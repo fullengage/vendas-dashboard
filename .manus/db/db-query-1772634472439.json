@@ -1,0 +1,21 @@
+{
+  "query": "SELECT * FROM import_batches WHERE file_hash = '96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT * FROM import_batches WHERE file_hash = '96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7';",
+  "rows": [
+    {
+      "id": "1",
+      "filename": "PedidosdeVendaxProdutos-Periodo-01-01-2025a01-12-2025-Situacoesselecionadas-Aberto.csv",
+      "file_hash": "96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7",
+      "status": "processing",
+      "total_rows": "469",
+      "success_rows": "0",
+      "error_rows": "0",
+      "createdAt": "2026-03-04 14:24:28",
+      "updatedAt": "2026-03-04 14:24:28"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfilename\tfile_hash\tstatus\ttotal_rows\tsuccess_rows\terror_rows\tcreatedAt\tupdatedAt\n1\tPedidosdeVendaxProdutos-Periodo-01-01-2025a01-12-2025-Situacoesselecionadas-Aberto.csv\t96ea5a5defda019f1a5d7096a731c658bf7c65f6e8ef5d57cb69c124617d8cc7\tprocessing\t469\t0\t0\t2026-03-04 14:24:28\t2026-03-04 14:24:28\n",
+  "stderr": "",
+  "execution_time_ms": 376
+}

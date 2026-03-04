@@ -1,6 +1,6 @@
 import { eq, sql, and, gte, lte, desc, asc, count, sum } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contasReceber, InsertContaReceber } from "../drizzle/schema";
+import { InsertUser, users, contasReceber, InsertContaReceber, importBatches, importErrors, InsertImportBatch, InsertImportError, orders, orderItems, InsertOrder, InsertOrderItem } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -492,7 +492,7 @@ export async function getClientesInativos(mesesInatividade: number = 6) {
 // PEDIDOS DE VENDA
 // ============================================================================
 
-import { orders, orderItems, importBatches, importErrors, type InsertOrder, type InsertOrderItem, type InsertImportBatch, type InsertImportError } from "../drizzle/schema";
+
 
 /**
  * Importar pedidos com idempotência (upsert)
@@ -617,17 +617,11 @@ export async function createImportBatch(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const batch: InsertImportBatch = {
-    filename,
-    fileHash,
-    status: "processing",
-    totalRows,
-    successRows: 0,
-    errorRows: 0,
-  };
-
-  const result = await db.insert(importBatches).values(batch);
-  return (result as any).insertId as unknown as number;
+  // Usar raw SQL para evitar problema com id = default
+  const result = await db.execute(
+    sql`INSERT INTO import_batches (filename, file_hash, status, total_rows, success_rows, error_rows) VALUES (${filename}, ${fileHash}, 'processing', ${totalRows}, 0, 0)`
+  );
+  return (result as any)[0].insertId as unknown as number;
 }
 
 /**
