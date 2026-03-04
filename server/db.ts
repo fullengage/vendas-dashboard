@@ -486,3 +486,231 @@ export async function getClientesInativos(mesesInatividade: number = 6) {
 
   return (result as any)[0] || [];
 }
+
+
+// ============================================================================
+// PEDIDOS DE VENDA
+// ============================================================================
+
+import { orders, orderItems, importBatches, importErrors, type InsertOrder, type InsertOrderItem, type InsertImportBatch, type InsertImportError } from "../drizzle/schema";
+
+/**
+ * Importar pedidos com idempotência (upsert)
+ */
+export async function importPedidos(
+  parsedPedidos: Array<{
+    codPedido: string;
+    codPessoa: string;
+    codUsuario: string;
+    codEquipe: string;
+    dtaEmissao: string;
+    dtaEntrega: string;
+    dtaFaturamento: string;
+    valorTotal: number;
+    desconto: number;
+    valorFinal: number;
+    situacao: string;
+    descSit: string;
+    codStatus: string;
+    formaPagto: string;
+    itens: Array<{
+      codProd: string;
+      descSaida: string;
+      unidade: string;
+      qtde: number;
+      valorUnit: number;
+      totalItem: number;
+      desconto: number;
+      lote: string;
+    }>;
+  }>,
+  batchId: number
+): Promise<{ created: number; updated: number; errors: string[] }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let created = 0;
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const pedido of parsedPedidos) {
+    try {
+      // Verificar se o pedido já existe
+      const existing = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.codPedido, pedido.codPedido))
+        .limit(1);
+
+      const orderData: InsertOrder = {
+        codPedido: pedido.codPedido,
+        codPessoa: pedido.codPessoa,
+        codUsuario: pedido.codUsuario,
+        codEquipe: pedido.codEquipe,
+        dtaEmissao: pedido.dtaEmissao,
+        dtaEntrega: pedido.dtaEntrega,
+        dtaFaturamento: pedido.dtaFaturamento,
+        valorTotal: pedido.valorTotal.toString(),
+        desconto: pedido.desconto.toString(),
+        valorFinal: pedido.valorFinal.toString(),
+        situacao: pedido.situacao,
+        descSit: pedido.descSit,
+        codStatus: pedido.codStatus,
+        formaPagto: pedido.formaPagto,
+        importBatchId: batchId,
+      };
+
+      let orderId: number;
+
+      if (existing.length > 0) {
+        // Atualizar pedido existente
+        await db
+          .update(orders)
+          .set(orderData)
+          .where(eq(orders.codPedido, pedido.codPedido));
+        orderId = existing[0].id;
+        updated++;
+      } else {
+        // Inserir novo pedido
+        const result = await db.insert(orders).values(orderData);
+        orderId = (result as any).insertId as unknown as number;
+        created++;
+      }
+
+      // Importar itens do pedido
+      for (const item of pedido.itens) {
+        const itemData: InsertOrderItem = {
+          orderId,
+          codProd: item.codProd,
+          descSaida: item.descSaida,
+          unidade: item.unidade,
+          qtde: item.qtde.toString(),
+          valorUnit: item.valorUnit.toString(),
+          totalItem: item.totalItem.toString(),
+          desconto: item.desconto.toString(),
+          lote: item.lote,
+        };
+
+        try {
+          // Tentar inserir item (pode falhar se já existe)
+          await db.insert(orderItems).values(itemData);
+        } catch (err) {
+          // Item já existe, ignorar (idempotência)
+        }
+      }
+    } catch (err) {
+      errors.push(`Erro ao importar pedido ${pedido.codPedido}: ${err instanceof Error ? err.message : "unknown"}`);
+    }
+  }
+
+  return { created, updated, errors };
+}
+
+/**
+ * Criar lote de importação
+ */
+export async function createImportBatch(
+  filename: string,
+  fileHash: string,
+  totalRows: number
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const batch: InsertImportBatch = {
+    filename,
+    fileHash,
+    status: "processing",
+    totalRows,
+    successRows: 0,
+    errorRows: 0,
+  };
+
+  const result = await db.insert(importBatches).values(batch);
+  return (result as any).insertId as unknown as number;
+}
+
+/**
+ * Atualizar status do lote de importação
+ */
+export async function updateImportBatch(
+  batchId: number,
+  successRows: number,
+  errorRows: number,
+  status: "completed" | "failed"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(importBatches)
+    .set({
+      successRows,
+      errorRows,
+      status,
+    })
+    .where(eq(importBatches.id, batchId));
+}
+
+/**
+ * Registrar erro de importação
+ */
+export async function logImportError(
+  batchId: number,
+  rowNumber: number,
+  errorMessage: string,
+  rawRowJson: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const error: InsertImportError = {
+    batchId,
+    rowNumber,
+    errorMessage,
+    rawRowJson,
+  };
+
+  await db.insert(importErrors).values(error);
+}
+
+/**
+ * Listar pedidos por cliente
+ */
+export async function getPedidosPorCliente(codPessoa: string): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select()
+    .from(orders)
+    .where(eq(orders.codPessoa, codPessoa))
+    .orderBy(desc(orders.dtaEmissao));
+}
+
+/**
+ * Listar itens de um pedido
+ */
+export async function getItensPedido(orderId: number): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.orderId, orderId));
+}
+
+/**
+ * Listar pedidos por vendedor
+ */
+export async function getPedidosPorVendedor(codUsuario: string): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select()
+    .from(orders)
+    .where(eq(orders.codUsuario, codUsuario))
+    .orderBy(desc(orders.dtaEmissao));
+}

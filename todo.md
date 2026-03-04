@@ -74,3 +74,14 @@
 - [x] Adicionar scroll vertical na tabela de Relatório por Região (Detalhamento por Estado)
 - [x] Aumentar altura máxima das tabelas para 600px
 - [x] Adicionar z-index sticky no header para manter visível durante scroll
+
+
+## Fase 11: Módulo de Pedidos de Venda x Produtos
+- [ ] Analisar estrutura do CSV e mapear colunas para o banco
+- [ ] Criar migrations para orders, order_items, import_batches, import_errors
+- [ ] Implementar parser CSV com encoding ISO-8859-1 e separador ;
+- [ ] Criar importador com upsert e idempotência (file_hash)
+- [ ] Criar endpoints tRPC para pedidos (listar, detalhe, por cliente)
+- [ ] Criar tela de histórico de pedidos do cliente
+- [ ] Criar relatório de pedidos por vendedor
+- [ ] Testar e validar integração

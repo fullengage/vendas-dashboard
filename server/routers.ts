@@ -16,8 +16,17 @@ import {
   getClientesDoVendedor,
   getHistoricoCliente,
   getClientesInativos,
+  importPedidos,
+  createImportBatch,
+  updateImportBatch,
+  logImportError,
+  getPedidosPorCliente,
+  getItensPedido,
+  getPedidosPorVendedor,
 } from "./db";
+import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 import { InsertContaReceber } from "../drizzle/schema";
+import { pedidosRouter } from "./pedidosRouter";
 
 function parseDate(dateStr: string | null | undefined): string | null {
   if (!dateStr || dateStr.trim() === "") return null;
@@ -235,6 +244,7 @@ export const appRouter = router({
         };
       }),
   }),
+  pedidos: pedidosRouter,
 });
 
 export type AppRouter = typeof appRouter;

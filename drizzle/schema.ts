@@ -63,3 +63,88 @@ export const contasReceber = mysqlTable("contas_receber", {
 
 export type ContaReceber = typeof contasReceber.$inferSelect;
 export type InsertContaReceber = typeof contasReceber.$inferInsert;
+
+/**
+ * Pedidos de Venda
+ * Chave única: cod_pedido para evitar duplicidade
+ */
+export const orders = mysqlTable("orders", {
+  id: int("id").autoincrement().primaryKey(),
+  codPedido: varchar("cod_pedido", { length: 20 }).notNull().unique(),
+  codPessoa: varchar("cod_pessoa", { length: 20 }).notNull(), // Cliente
+  codUsuario: varchar("cod_usuario", { length: 20 }), // Vendedor
+  codEquipe: varchar("cod_equipe", { length: 20 }),
+  dtaEmissao: varchar("dta_emissao", { length: 10 }).notNull(), // dd/mm/yyyy
+  dtaEntrega: varchar("dta_entrega", { length: 10 }),
+  dtaFaturamento: varchar("dta_faturamento", { length: 10 }),
+  valorTotal: decimal("valor_total", { precision: 15, scale: 2 }).default("0"),
+  desconto: decimal("desconto", { precision: 15, scale: 2 }).default("0"),
+  valorFinal: decimal("valor_final", { precision: 15, scale: 2 }).default("0"),
+  situacao: varchar("situacao", { length: 50 }), // NORMAL, CANCELADO, etc
+  descSit: varchar("desc_sit", { length: 100 }),
+  codStatus: varchar("cod_status", { length: 20 }),
+  formaPagto: varchar("forma_pagto", { length: 50 }),
+  obs: text("obs"),
+  importBatchId: int("import_batch_id"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
+
+/**
+ * Itens do Pedido
+ * Chave única: order_id + cod_prod + lote para evitar duplicidade
+ */
+export const orderItems = mysqlTable("order_items", {
+  id: int("id").autoincrement().primaryKey(),
+  orderId: int("order_id").notNull(),
+  codProd: varchar("cod_prod", { length: 20 }).notNull(),
+  descSaida: varchar("desc_saida", { length: 255 }).notNull(),
+  unidade: varchar("unidade", { length: 10 }),
+  qtde: decimal("qtde", { precision: 12, scale: 2 }).default("0"),
+  valorUnit: decimal("valor_unit", { precision: 12, scale: 2 }).default("0"),
+  totalItem: decimal("total_item", { precision: 15, scale: 2 }).default("0"),
+  desconto: decimal("desconto", { precision: 15, scale: 2 }).default("0"),
+  lote: varchar("lote", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_order_prod_lote").on(table.orderId, table.codProd, table.lote),
+]);
+
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = typeof orderItems.$inferInsert;
+
+/**
+ * Lotes de Importação (para rastrear e evitar duplicidade)
+ */
+export const importBatches = mysqlTable("import_batches", {
+  id: int("id").autoincrement().primaryKey(),
+  filename: varchar("filename", { length: 255 }).notNull(),
+  fileHash: varchar("file_hash", { length: 64 }).notNull().unique(),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending"),
+  totalRows: int("total_rows").default(0),
+  successRows: int("success_rows").default(0),
+  errorRows: int("error_rows").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ImportBatch = typeof importBatches.$inferSelect;
+export type InsertImportBatch = typeof importBatches.$inferInsert;
+
+/**
+ * Erros de Importação (para auditoria)
+ */
+export const importErrors = mysqlTable("import_errors", {
+  id: int("id").autoincrement().primaryKey(),
+  batchId: int("batch_id").notNull(),
+  rowNumber: int("row_number").notNull(),
+  errorMessage: text("error_message"),
+  rawRowJson: text("raw_row_json"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ImportError = typeof importErrors.$inferSelect;
+export type InsertImportError = typeof importErrors.$inferInsert;
