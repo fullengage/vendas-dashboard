@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PedidoDetalhesModal } from "@/components/PedidoDetalhesModal";
+import { Eye } from "lucide-react";
 
 const MESES_NOME: Record<string, string> = {
   "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr",
@@ -96,6 +98,18 @@ export default function HistoricoCliente() {
   const searchParams = new URLSearchParams(searchStr);
   const vendedor = searchParams.get("vendedor") || undefined;
   const [searchProduto, setSearchProduto] = useState("");
+  const [modalAberto, setModalAberto] = useState(false);
+  const [pedidoSelecionado, setPedidoSelecionado] = useState<any>(null);
+
+  const abrirDetalhes = (pedido: any) => {
+    setPedidoSelecionado(pedido);
+    setModalAberto(true);
+  };
+
+  const fecharDetalhes = () => {
+    setModalAberto(false);
+    setPedidoSelecionado(null);
+  };
 
   // Buscar dados de contas a receber (títulos)
   const contasInput = useMemo(() => ({
@@ -369,6 +383,7 @@ export default function HistoricoCliente() {
                         <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                         <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
                         <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Vendedor</th>
+                        <th className="text-center py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Ação</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -385,6 +400,15 @@ export default function HistoricoCliente() {
                             </td>
                             <td className="py-2 px-3 text-right font-mono font-medium">{formatCurrency(parseFloat(p.valorFinal || p.valorTotal || "0"))}</td>
                             <td className="py-2 px-3 text-muted-foreground">{p.codUsuario || "—"}</td>
+                            <td className="py-2 px-3 text-center">
+                              <button
+                                onClick={() => abrirDetalhes(p)}
+                                className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-primary hover:bg-primary/10 rounded transition-colors"
+                              >
+                                <Eye className="w-3 h-3" />
+                                Ver
+                              </button>
+                            </td>
                           </tr>
                         );
                       })}
@@ -528,6 +552,19 @@ export default function HistoricoCliente() {
           </footer>
         </div>
       </main>
+
+      {pedidoSelecionado && (
+        <PedidoDetalhesModal
+          isOpen={modalAberto}
+          onClose={fecharDetalhes}
+          orderId={pedidoSelecionado.id}
+          codPedido={pedidoSelecionado.codPedido}
+          dtaEmissao={pedidoSelecionado.dtaEmissao}
+          valorTotal={pedidoSelecionado.valorFinal || pedidoSelecionado.valorTotal}
+          isFaturado={pedidoSelecionado.isFaturado}
+          situacao={pedidoSelecionado.situacao}
+        />
+      )}
     </div>
   );
 }

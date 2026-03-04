@@ -1,0 +1,210 @@
+{
+  "query": "SELECT o.id, o.cod_pedido, o.dta_emissao, oi.cod_prod, oi.desc_saida, oi.qtde, oi.valor_unit, oi.total_item FROM orders o LEFT JOIN order_items oi ON o.id = oi.order_id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT o.id, o.cod_pedido, o.dta_emissao, oi.cod_prod, oi.desc_saida, oi.qtde, oi.valor_unit, oi.total_item FROM orders o LEFT JOIN order_items oi ON o.id = oi.order_id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "cod_pedido": "7001",
+      "dta_emissao": "2024-09-18",
+      "cod_prod": "2",
+      "desc_saida": "ENCO UNIX - Q. ARTESANAL FRAC. NATA DE PRATA (24X28X0,09)",
+      "qtde": "17.00",
+      "valor_unit": "345.00",
+      "total_item": "5865.00"
+    },
+    {
+      "id": "2",
+      "cod_pedido": "7009",
+      "dta_emissao": "2024-09-19",
+      "cod_prod": "12",
+      "desc_saida": "NYLON POLI - EMB. LINGUIÇA TP CALABRESA RESFRI COZ E DEF ITABOM (27X40X0,14)",
+      "qtde": "50.00",
+      "valor_unit": "632.20",
+      "total_item": "31610.00"
+    },
+    {
+      "id": "3",
+      "cod_pedido": "7017",
+      "dta_emissao": "2024-09-19",
+      "cod_prod": "13",
+      "desc_saida": "ENCO UNIX - Q. MINAS ARTESANAL D´FARM CUNHA (15X21X0,09)",
+      "qtde": "40.00",
+      "valor_unit": "186.00",
+      "total_item": "7440.00"
+    },
+    {
+      "id": "4",
+      "cod_pedido": "7026",
+      "dta_emissao": "2024-09-19",
+      "cod_prod": "22",
+      "desc_saida": "ENCO UNIX - REQUEIJÃO DO NORTE FRAC. MINAS BAHIA (15X28X0,09)",
+      "qtde": "15.00",
+      "valor_unit": "275.00",
+      "total_item": "4125.00"
+    },
+    {
+      "id": "5",
+      "cod_pedido": "7033",
+      "dta_emissao": "2024-09-19",
+      "cod_prod": "18",
+      "desc_saida": "ENCO UNIX - LISO (15,5X21,5X0,09)",
+      "qtde": "17.00",
+      "valor_unit": "170.00",
+      "total_item": "2890.00"
+    },
+    {
+      "id": "6",
+      "cod_pedido": "7039",
+      "dta_emissao": "2024-09-20",
+      "cod_prod": "16",
+      "desc_saida": "UMR - LOJAS MAR&RIO (20X35X0,15)",
+      "qtde": "537.60",
+      "valor_unit": "10.00",
+      "total_item": "5376.00"
+    },
+    {
+      "id": "7",
+      "cod_pedido": "7056",
+      "dta_emissao": "2024-09-24",
+      "cod_prod": "81",
+      "desc_saida": "UNIX TRIPA - MORTADELA EL MILAGRO (7,8X0,09) VR100PL",
+      "qtde": "30.00",
+      "valor_unit": "486.49",
+      "total_item": "14594.70"
+    },
+    {
+      "id": "8",
+      "cod_pedido": "7123",
+      "dta_emissao": "2024-09-30",
+      "cod_prod": "205",
+      "desc_saida": "NYLON POLI - LISO (10X36X0,12)",
+      "qtde": "15.00",
+      "valor_unit": "146.88",
+      "total_item": "2203.20"
+    },
+    {
+      "id": "9",
+      "cod_pedido": "7124",
+      "dta_emissao": "2024-09-30",
+      "cod_prod": "206",
+      "desc_saida": "NYLON POLI - LISO (15X22X0,12)",
+      "qtde": "20.00",
+      "valor_unit": "130.68",
+      "total_item": "2613.60"
+    },
+    {
+      "id": "10",
+      "cod_pedido": "7125",
+      "dta_emissao": "2024-09-30",
+      "cod_prod": "207",
+      "desc_saida": "NYLON POLI - LISO (18X25X0,12)",
+      "qtde": "45.00",
+      "valor_unit": "173.34",
+      "total_item": "7800.30"
+    },
+    {
+      "id": "11",
+      "cod_pedido": "7126",
+      "dta_emissao": "2024-09-30",
+      "cod_prod": "208",
+      "desc_saida": "NYLON POLI - LISO (18X36X0,12)",
+      "qtde": "45.00",
+      "valor_unit": "249.61",
+      "total_item": "11232.45"
+    },
+    {
+      "id": "12",
+      "cod_pedido": "7143",
+      "dta_emissao": "2024-10-04",
+      "cod_prod": "2",
+      "desc_saida": "ENCO UNIX - Q. ARTESANAL NATA DE PRATA (24X28X0,09)",
+      "qtde": "30.00",
+      "valor_unit": "345.00",
+      "total_item": "10350.00"
+    },
+    {
+      "id": "13",
+      "cod_pedido": "7168",
+      "dta_emissao": "2024-10-10",
+      "cod_prod": "338",
+      "desc_saida": "ENCO UNIX - Q. MUÇARELA UNIÃO (24X46X0,09)",
+      "qtde": "60.00",
+      "valor_unit": "540.00",
+      "total_item": "32400.00"
+    },
+    {
+      "id": "14",
+      "cod_pedido": "7238",
+      "dta_emissao": "2024-10-23",
+      "cod_prod": "426",
+      "desc_saida": "ENCO UNIX - Q. MINAS FRESCAL AMAZON NAT (16X21X0,12)",
+      "qtde": "25.00",
+      "valor_unit": "267.93",
+      "total_item": "6698.25"
+    },
+    {
+      "id": "14",
+      "cod_pedido": "7238",
+      "dta_emissao": "2024-10-23",
+      "cod_prod": "429",
+      "desc_saida": "ENCO UNIX - RICOTA FRESCA AMAZON NAT (16X21X0,12)",
+      "qtde": "20.00",
+      "valor_unit": "267.93",
+      "total_item": "5358.60"
+    },
+    {
+      "id": "15",
+      "cod_pedido": "7241",
+      "dta_emissao": "2024-10-24",
+      "cod_prod": "430",
+      "desc_saida": "UNIX TRIPA - POLACA FIAMBRE OCHSI (6X0,09) MA005PL",
+      "qtde": "20.00",
+      "valor_unit": "427.30",
+      "total_item": "8546.00"
+    },
+    {
+      "id": "16",
+      "cod_pedido": "7242",
+      "dta_emissao": "2024-10-24",
+      "cod_prod": "432",
+      "desc_saida": "UNIX TRIPA - POLACA PICANTE FIAMBRE OCHSI (6X0,09) LA040PL",
+      "qtde": "20.00",
+      "valor_unit": "427.30",
+      "total_item": "8546.00"
+    },
+    {
+      "id": "17",
+      "cod_pedido": "7243",
+      "dta_emissao": "2024-10-24",
+      "cod_prod": "433",
+      "desc_saida": "UNIX TRIPA - MORTADELA PICANTE OCHSI (10X0,09) LA040PL",
+      "qtde": "15.00",
+      "valor_unit": "600.03",
+      "total_item": "9000.45"
+    },
+    {
+      "id": "18",
+      "cod_pedido": "7244",
+      "dta_emissao": "2024-10-24",
+      "cod_prod": "434",
+      "desc_saida": "NYLON POLI - BOLINHA DE QUEIJO 500G CASA DO BOLINHO DE FRANGO (18X25X0,14)",
+      "qtde": "9.00",
+      "valor_unit": "283.50",
+      "total_item": "2551.50"
+    },
+    {
+      "id": "19",
+      "cod_pedido": "7245",
+      "dta_emissao": "2024-10-24",
+      "cod_prod": "435",
+      "desc_saida": "NYLON POLI - QUEIJO FRESCO VINHAIS (18X22X0,12)",
+      "qtde": "30.00",
+      "valor_unit": "191.00",
+      "total_item": "5730.00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcod_pedido\tdta_emissao\tcod_prod\tdesc_saida\tqtde\tvalor_unit\ttotal_item\n1\t7001\t2024-09-18\t2\tENCO UNIX - Q. ARTESANAL FRAC. NATA DE PRATA (24X28X0,09)\t17.00\t345.00\t5865.00\n2\t7009\t2024-09-19\t12\tNYLON POLI - EMB. LINGUIÇA TP CALABRESA RESFRI COZ E DEF ITABOM (27X40X0,14)\t50.00\t632.20\t31610.00\n3\t7017\t2024-09-19\t13\tENCO UNIX - Q. MINAS ARTESANAL D´FARM CUNHA (15X21X0,09)\t40.00\t186.00\t7440.00\n4\t7026\t2024-09-19\t22\tENCO UNIX - REQUEIJÃO DO NORTE FRAC. MINAS BAHIA (15X28X0,09)\t15.00\t275.00\t4125.00\n5\t7033\t2024-09-19\t18\tENCO UNIX - LISO (15,5X21,5X0,09)\t17.00\t170.00\t2890.00\n6\t7039\t2024-09-20\t16\tUMR - LOJAS MAR&RIO (20X35X0,15)\t537.60\t10.00\t5376.00\n7\t7056\t2024-09-24\t81\tUNIX TRIPA - MORTADELA EL MILAGRO (7,8X0,09) VR100PL\t30.00\t486.49\t14594.70\n8\t7123\t2024-09-30\t205\tNYLON POLI - LISO (10X36X0,12)\t15.00\t146.88\t2203.20\n9\t7124\t2024-09-30\t206\tNYLON POLI - LISO (15X22X0,12)\t20.00\t130.68\t2613.60\n10\t7125\t2024-09-30\t207\tNYLON POLI - LISO (18X25X0,12)\t45.00\t173.34\t7800.30\n11\t7126\t2024-09-30\t208\tNYLON POLI - LISO (18X36X0,12)\t45.00\t249.61\t11232.45\n12\t7143\t2024-10-04\t2\tENCO UNIX - Q. ARTESANAL NATA DE PRATA (24X28X0,09)\t30.00\t345.00\t10350.00\n13\t7168\t2024-10-10\t338\tENCO UNIX - Q. MUÇARELA UNIÃO (24X46X0,09)\t60.00\t540.00\t32400.00\n14\t7238\t2024-10-23\t426\tENCO UNIX - Q. MINAS FRESCAL AMAZON NAT (16X21X0,12)\t25.00\t267.93\t6698.25\n14\t7238\t2024-10-23\t429\tENCO UNIX - RICOTA FRESCA AMAZON NAT (16X21X0,12)\t20.00\t267.93\t5358.60\n15\t7241\t2024-10-24\t430\tUNIX TRIPA - POLACA FIAMBRE OCHSI (6X0,09) MA005PL\t20.00\t427.30\t8546.00\n16\t7242\t2024-10-24\t432\tUNIX TRIPA - POLACA PICANTE FIAMBRE OCHSI (6X0,09) LA040PL\t20.00\t427.30\t8546.00\n17\t7243\t2024-10-24\t433\tUNIX TRIPA - MORTADELA PICANTE OCHSI (10X0,09) LA040PL\t15.00\t600.03\t9000.45\n18\t7244\t2024-10-24\t434\tNYLON POLI - BOLINHA DE QUEIJO 500G CASA DO BOLINHO DE FRANGO (18X25X0,14)\t9.00\t283.50\t2551.50\n19\t7245\t2024-10-24\t435\tNYLON POLI - QUEIJO FRESCO VINHAIS (18X22X0,12)\t30.00\t191.00\t5730.00\n",
+  "stderr": "",
+  "execution_time_ms": 370
+}

@@ -97,3 +97,12 @@
 - [x] Implementar card KPI de dias sem comprar com alertas por cor
 - [x] Escrever testes vitest para os novos endpoints (14 testes passando)
 - [x] Testar e validar integração na página do cliente
+
+
+## Fase 13: Exibir Produtos/Itens no Histórico de Pedidos
+- [x] Criar função para obter itens do pedido com detalhes (desc_saida, qtde, valor)
+- [x] Implementar modal/drawer de detalhes do pedido com lista de itens
+- [x] Adicionar ação "Ver detalhes" em cada linha da tabela de pedidos
+- [x] Melhorar getProdutosCompradosCliente para usar desc_saida corretamente
+- [x] Testar exibição de produtos no modal
+- [x] Escrever testes vitest para novas funções (27 testes passando)
