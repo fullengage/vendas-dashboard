@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_pedidos FROM orders; SELECT COUNT(*) as total_itens FROM order_items;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT COUNT(*) as total_pedidos FROM orders; SELECT COUNT(*) as total_itens FROM order_items;",
+  "rows": [
+    {
+      "total_pedidos": "139"
+    },
+    {
+      "total_pedidos": "total_itens"
+    },
+    {
+      "total_pedidos": "179"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_pedidos\n139\ntotal_itens\n179\n",
+  "stderr": "",
+  "execution_time_ms": 522
+}
