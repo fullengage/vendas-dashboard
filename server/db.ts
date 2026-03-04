@@ -708,3 +708,136 @@ export async function getPedidosPorVendedor(codUsuario: string): Promise<any[]> 
     .where(eq(orders.codUsuario, codUsuario))
     .orderBy(desc(orders.dtaEmissao));
 }
+
+
+/**
+ * Obter histórico completo de pedidos do cliente (faturados e não faturados)
+ * Inclui status e informações de vendedor
+ */
+export async function getHistoricoPedidosCliente(codPessoa: string): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select({
+      id: orders.id,
+      codPedido: orders.codPedido,
+      dtaEmissao: orders.dtaEmissao,
+      dtaFaturamento: orders.dtaFaturamento,
+      valorTotal: orders.valorTotal,
+      valorFinal: orders.valorFinal,
+      situacao: orders.situacao,
+      descSit: orders.descSit,
+      codStatus: orders.codStatus,
+      codUsuario: orders.codUsuario,
+      isFaturado: sql<boolean>`CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN 1 ELSE 0 END`,
+    })
+    .from(orders)
+    .where(eq(orders.codPessoa, codPessoa))
+    .orderBy(desc(orders.dtaEmissao));
+}
+
+/**
+ * Obter produtos já comprados por um cliente com agregações
+ * Mostra quantidade total, número de pedidos e última data de compra
+ */
+export async function getProdutosCompradosCliente(codPessoa: string): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return db
+    .select({
+      codProd: orderItems.codProd,
+      descSaida: orderItems.descSaida,
+      qtdTotal: sql<string>`SUM(CAST(${orderItems.qtde} AS DECIMAL(12,2)))`,
+      nroPedidos: sql<number>`COUNT(DISTINCT ${orderItems.orderId})`,
+      ultimaCompra: sql<string>`MAX(${orders.dtaEmissao})`,
+      ultimaCompraFaturada: sql<string>`MAX(CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN ${orders.dtaEmissao} ELSE NULL END)`,
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .where(eq(orders.codPessoa, codPessoa))
+    .groupBy(orderItems.codProd, orderItems.descSaida)
+    .orderBy(desc(sql`MAX(${orders.dtaEmissao})`));
+}
+
+/**
+ * Obter último pedido do cliente com itens
+ */
+export async function getUltimoPedidoCliente(codPessoa: string): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const ultimoPedido = await db
+    .select({
+      id: orders.id,
+      codPedido: orders.codPedido,
+      dtaEmissao: orders.dtaEmissao,
+      dtaFaturamento: orders.dtaFaturamento,
+      valorTotal: orders.valorTotal,
+      valorFinal: orders.valorFinal,
+      situacao: orders.situacao,
+      descSit: orders.descSit,
+      codUsuario: orders.codUsuario,
+      isFaturado: sql<boolean>`CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN 1 ELSE 0 END`,
+    })
+    .from(orders)
+    .where(eq(orders.codPessoa, codPessoa))
+    .orderBy(desc(orders.dtaEmissao))
+    .limit(1);
+
+  if (!ultimoPedido || ultimoPedido.length === 0) return null;
+
+  const pedido = ultimoPedido[0];
+  const itens = await db
+    .select({
+      codProd: orderItems.codProd,
+      descSaida: orderItems.descSaida,
+      qtde: orderItems.qtde,
+      valorUnit: orderItems.valorUnit,
+      totalItem: orderItems.totalItem,
+    })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, pedido.id));
+
+  return { ...pedido, itens };
+}
+
+/**
+ * Obter dias sem comprar (baseado em última compra faturada)
+ * Retorna dias decorridos e data da última compra faturada
+ */
+export async function getDiasSemComprarCliente(codPessoa: string): Promise<{
+  diasSemComprar: number | null;
+  ultimaCompraFaturada: string | null;
+  temComprasFaturadas: boolean;
+}> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      ultimaCompraFaturada: sql<string>`MAX(CASE WHEN ${orders.dtaFaturamento} IS NOT NULL AND ${orders.dtaFaturamento} != '' THEN ${orders.dtaEmissao} ELSE NULL END)`,
+    })
+    .from(orders)
+    .where(eq(orders.codPessoa, codPessoa));
+
+  if (!result || result.length === 0) {
+    return { diasSemComprar: null, ultimaCompraFaturada: null, temComprasFaturadas: false };
+  }
+
+  const ultimaCompraFaturada = result[0].ultimaCompraFaturada;
+  if (!ultimaCompraFaturada) {
+    return { diasSemComprar: null, ultimaCompraFaturada: null, temComprasFaturadas: false };
+  }
+
+  const dataUltima = new Date(ultimaCompraFaturada + "T00:00:00");
+  const hoje = new Date();
+  const diasSemComprar = Math.floor((hoje.getTime() - dataUltima.getTime()) / (1000 * 60 * 60 * 24));
+
+  return {
+    diasSemComprar: diasSemComprar >= 0 ? diasSemComprar : 0,
+    ultimaCompraFaturada,
+    temComprasFaturadas: true,
+  };
+}

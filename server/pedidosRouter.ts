@@ -8,6 +8,10 @@ import {
   getPedidosPorCliente,
   getItensPedido,
   getPedidosPorVendedor,
+  getHistoricoPedidosCliente,
+  getProdutosCompradosCliente,
+  getUltimoPedidoCliente,
+  getDiasSemComprarCliente,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 
@@ -70,5 +74,41 @@ export const pedidosRouter = router({
     .input(z.object({ codUsuario: z.string() }))
     .query(async ({ input }) => {
       return getPedidosPorVendedor(input.codUsuario);
+    }),
+  
+  historicoCompleto: publicProcedure
+    .input(z.object({ codPessoa: z.string() }))
+    .query(async ({ input }) => {
+      const [pedidos, produtos, ultimoPedido, diasSemComprar] = await Promise.all([
+        getHistoricoPedidosCliente(input.codPessoa),
+        getProdutosCompradosCliente(input.codPessoa),
+        getUltimoPedidoCliente(input.codPessoa),
+        getDiasSemComprarCliente(input.codPessoa),
+      ]);
+      return { pedidos, produtos, ultimoPedido, diasSemComprar };
+    }),
+  
+  historicoCliente: publicProcedure
+    .input(z.object({ codPessoa: z.string() }))
+    .query(async ({ input }) => {
+      return getHistoricoPedidosCliente(input.codPessoa);
+    }),
+  
+  produtosComprados: publicProcedure
+    .input(z.object({ codPessoa: z.string() }))
+    .query(async ({ input }) => {
+      return getProdutosCompradosCliente(input.codPessoa);
+    }),
+  
+  ultimoPedido: publicProcedure
+    .input(z.object({ codPessoa: z.string() }))
+    .query(async ({ input }) => {
+      return getUltimoPedidoCliente(input.codPessoa);
+    }),
+  
+  diasSemComprar: publicProcedure
+    .input(z.object({ codPessoa: z.string() }))
+    .query(async ({ input }) => {
+      return getDiasSemComprarCliente(input.codPessoa);
     }),
 });

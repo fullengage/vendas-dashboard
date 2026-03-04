@@ -85,3 +85,15 @@
 - [ ] Criar tela de histórico de pedidos do cliente
 - [ ] Criar relatório de pedidos por vendedor
 - [ ] Testar e validar integração
+
+## Fase 12: Melhorar Histórico do Cliente - Ferramenta Comercial Completa
+- [x] Analisar schema de pedidos e criar procedures tRPC para histórico completo
+- [x] Criar endpoint tRPC para histórico de pedidos (faturados e não faturados)
+- [x] Criar endpoint tRPC para produtos já comprados com agregações
+- [x] Criar endpoint tRPC para último pedido e dias sem comprar
+- [x] Implementar tabela de histórico de pedidos com status e destaque visual
+- [x] Implementar seção de produtos já comprados com busca
+- [x] Implementar card de último pedido com ação "Ligar novamente"
+- [x] Implementar card KPI de dias sem comprar com alertas por cor
+- [x] Escrever testes vitest para os novos endpoints (14 testes passando)
+- [x] Testar e validar integração na página do cliente

@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { formatCurrency, formatNumber, formatPercent } from "@/hooks/useData";
 import { Link, useParams, useSearch } from "wouter";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import {
   BarChart,
   Bar,
@@ -26,7 +27,12 @@ import {
   User,
   AlertTriangle,
   CheckCircle,
+  Package,
+  Phone,
+  Search,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const MESES_NOME: Record<string, string> = {
   "01": "Jan", "02": "Fev", "03": "Mar", "04": "Abr",
@@ -73,26 +79,59 @@ function formatDate(dateStr: string | null): string {
   return dateStr;
 }
 
+function getStatusBadge(isFaturado: boolean, situacao: string) {
+  if (isFaturado) {
+    return { label: "Faturado", color: "bg-green-ok-light text-green-ok" };
+  }
+  if (situacao === "CANCELADO") {
+    return { label: "Cancelado", color: "bg-red-100 text-red-700" };
+  }
+  return { label: "Não Faturado", color: "bg-orange-alert-light text-orange-alert" };
+}
+
 export default function HistoricoCliente() {
   const params = useParams<{ nome: string }>();
   const clienteNome = decodeURIComponent(params.nome || "");
   const searchStr = useSearch();
   const searchParams = new URLSearchParams(searchStr);
   const vendedor = searchParams.get("vendedor") || undefined;
+  const [searchProduto, setSearchProduto] = useState("");
 
-  const input = useMemo(() => ({
+  // Buscar dados de contas a receber (títulos)
+  const contasInput = useMemo(() => ({
     cliente: clienteNome,
     vendedor,
   }), [clienteNome, vendedor]);
 
-  const { data, isLoading } = trpc.contas.historicoCliente.useQuery(input);
+  const { data: contasData, isLoading: contasLoading } = trpc.contas.historicoCliente.useQuery(contasInput);
 
-  const resumo = data?.resumo;
-  const titulos = data?.titulos || [];
+  // Buscar dados de pedidos
+  const pedidosInput = useMemo(() => ({
+    codPessoa: clienteNome, // Usar o nome do cliente como código
+  }), [clienteNome]);
+
+  const { data: pedidosData, isLoading: pedidosLoading } = trpc.pedidos.historicoCompleto.useQuery(pedidosInput);
+
+  const resumo = contasData?.resumo;
+  const titulos = contasData?.titulos || [];
+  const pedidos = pedidosData?.pedidos || [];
+  const produtos = pedidosData?.produtos || [];
+  const ultimoPedido = pedidosData?.ultimoPedido;
+  const diasSemComprar = pedidosData?.diasSemComprar;
+
+  // Filtrar produtos por busca
+  const produtosFiltrados = useMemo(() => {
+    if (!searchProduto) return produtos;
+    const termo = searchProduto.toLowerCase();
+    return produtos.filter((p: any) => 
+      p.descSaida?.toLowerCase().includes(termo) || 
+      p.codProd?.toLowerCase().includes(termo)
+    );
+  }, [produtos, searchProduto]);
 
   const evolucao = useMemo(() => {
-    if (!data?.evolucaoMensal) return [];
-    return data.evolucaoMensal.map((e: any) => {
+    if (!contasData?.evolucaoMensal) return [];
+    return contasData.evolucaoMensal.map((e: any) => {
       const parts = (e.mes as string).split("-");
       const mesLabel = MESES_NOME[parts[1]] || parts[1];
       return {
@@ -102,7 +141,7 @@ export default function HistoricoCliente() {
         titulos: e.qtdTitulos,
       };
     });
-  }, [data]);
+  }, [contasData]);
 
   // Calculate frequency info
   const totalValor = parseFloat(resumo?.totalValor || "0");
@@ -121,6 +160,8 @@ export default function HistoricoCliente() {
     : freqRatio >= 0.25
     ? { label: "Esporádico", desc: "Compra ocasionalmente", cor: "bg-orange-alert-light text-orange-alert", icon: <AlertTriangle className="w-4 h-4 text-orange-alert" /> }
     : { label: "Raro", desc: "Compra raramente", cor: "bg-red-100 text-red-700", icon: <AlertTriangle className="w-4 h-4 text-red-700" /> };
+
+  const isLoading = contasLoading || pedidosLoading;
 
   if (isLoading) {
     return (
@@ -181,119 +222,310 @@ export default function HistoricoCliente() {
 
       <main className="flex-1 min-h-0 overflow-y-auto">
         <div className="container py-6 space-y-6">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-          <KPISmall icon={<DollarSign className="w-4 h-4" />} label="Total Faturado" value={formatCurrency(totalValor)} />
-          <KPISmall icon={<TrendingUp className="w-4 h-4" />} label="Total Recebido" value={formatCurrency(totalPago)} badge={formatPercent(taxaRecebimento)} badgeColor={taxaRecebimento >= 98 ? "green" : taxaRecebimento >= 90 ? "blue" : "orange"} />
-          <KPISmall icon={<ShoppingCart className="w-4 h-4" />} label="Ticket Médio" value={formatCurrency(ticketMedio)} sub={`${resumo?.qtdTitulos || 0} títulos`} />
-          <KPISmall icon={<CalendarDays className="w-4 h-4" />} label="Última Compra" value={formatDate(resumo?.ultimaCompra || null)} sub={diasDesde(resumo?.ultimaCompra || null)} />
-          <div className="bg-card border border-border rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              {freqInfo.icon}
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Frequência</span>
-            </div>
-            <p className="text-lg font-bold text-foreground">{mesesComCompra} <span className="text-sm font-normal text-muted-foreground">{mesesComCompra === 1 ? "mês" : "meses"}</span></p>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-[10px] text-muted-foreground">{freqInfo.desc}</span>
-              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${freqInfo.cor}`}>{freqInfo.label}</span>
-            </div>
-          </div>
-          <KPISmall icon={<Clock className="w-4 h-4" />} label="Atraso Médio" value={`${mediaAtraso}d`} badge={`${resumo?.titulosAtrasados || 0} atrasados`} badgeColor={mediaAtraso <= 0 ? "green" : mediaAtraso <= 5 ? "blue" : "orange"} />
-        </div>
-
-        {/* Evolução Mensal */}
-        {evolucao.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-foreground mb-1">Evolução Mensal</h3>
-            <p className="text-xs text-muted-foreground mb-4">Histórico de compras ao longo do tempo</p>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={evolucao}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="faturado" name="Faturado" fill="#0F4C75" radius={[4, 4, 0, 0]} barSize={24} />
-                <Bar dataKey="recebido" name="Recebido" fill="#2D6A4F" radius={[4, 4, 0, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-          </motion.div>
-        )}
-
-        {/* Títulos Table */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="bg-card border border-border rounded-lg overflow-hidden">
-          <div className="p-5 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Histórico de Títulos</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {titulos.length} títulos · Ordenados do mais recente ao mais antigo
-                </p>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+            <KPISmall icon={<DollarSign className="w-4 h-4" />} label="Total Faturado" value={formatCurrency(totalValor)} />
+            <KPISmall icon={<TrendingUp className="w-4 h-4" />} label="Total Recebido" value={formatCurrency(totalPago)} badge={formatPercent(taxaRecebimento)} badgeColor={taxaRecebimento >= 98 ? "green" : taxaRecebimento >= 90 ? "blue" : "orange"} />
+            <KPISmall icon={<ShoppingCart className="w-4 h-4" />} label="Ticket Médio" value={formatCurrency(ticketMedio)} sub={`${resumo?.qtdTitulos || 0} títulos`} />
+            <KPISmall icon={<CalendarDays className="w-4 h-4" />} label="Última Compra" value={formatDate(resumo?.ultimaCompra || null)} sub={diasDesde(resumo?.ultimaCompra || null)} />
+            <div className="bg-card border border-border rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                {freqInfo.icon}
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Frequência</span>
               </div>
-              <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+              <p className="text-lg font-bold text-foreground">{mesesComCompra} <span className="text-sm font-normal text-muted-foreground">{mesesComCompra === 1 ? "mês" : "meses"}</span></p>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-[10px] text-muted-foreground">{freqInfo.desc}</span>
+                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${freqInfo.cor}`}>{freqInfo.label}</span>
+              </div>
             </div>
+            <KPISmall icon={<Clock className="w-4 h-4" />} label="Atraso Médio" value={`${mediaAtraso}d`} badge={`${resumo?.titulosAtrasados || 0} atrasados`} badgeColor={mediaAtraso <= 0 ? "green" : mediaAtraso <= 5 ? "blue" : "orange"} />
           </div>
-          <ScrollArea className="max-h-[600px] border-t border-border">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
-                <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
-                  <tr>
-                    <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Nº NF</th>
-                    <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Parcela</th>
-                    <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Situação</th>
-                    <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Descrição</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Vencimento</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Pagamento</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor Pago</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Desconto</th>
-                    <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Atraso</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {titulos.map((t: any, i: number) => {
-                    const atraso = t.atrasoDias || 0;
-                    const situacaoCor = t.situacao === "PAGO" || t.situacao === "LIQUIDADO"
-                      ? "bg-green-ok-light text-green-ok"
-                      : t.situacao === "ABERTO"
-                      ? "bg-orange-alert-light text-orange-alert"
-                      : "bg-muted text-muted-foreground";
-                    return (
-                      <tr key={t.id || i} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
-                        <td className="py-2 px-3 font-mono">{t.numNf || t.cont}</td>
-                        <td className="py-2 px-3 font-mono">{t.parcela}</td>
-                        <td className="py-2 px-3">
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${situacaoCor}`}>
-                            {t.situacao || "N/D"}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-muted-foreground">{t.descricao || "—"}</td>
-                        <td className="py-2 px-3 text-right font-mono">{formatDate(t.dtaVecto)}</td>
-                        <td className="py-2 px-3 text-right font-mono font-medium">{formatCurrency(parseFloat(t.valor || "0"))}</td>
-                        <td className="py-2 px-3 text-right font-mono">{formatDate(t.dtaPagto)}</td>
-                        <td className="py-2 px-3 text-right font-mono">{formatCurrency(parseFloat(t.valorPago || "0"))}</td>
-                        <td className="py-2 px-3 text-right font-mono">{parseFloat(t.desconto || "0") > 0 ? formatCurrency(parseFloat(t.desconto)) : "—"}</td>
-                        <td className="py-2 px-3 text-right">
-                          <span className={`font-mono px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                            atraso <= 0 ? "bg-green-ok-light text-green-ok" : atraso <= 5 ? "bg-petrol-bg text-petrol" : "bg-orange-alert-light text-orange-alert"
-                          }`}>
-                            {atraso}d
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </ScrollArea>
-        </motion.div>
 
-        <footer className="text-center py-4 border-t border-border">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-            UNIX PACK Embalagens Flexíveis — Histórico do Cliente
-          </p>
-        </footer>
+          {/* Dias sem Comprar Card */}
+          {diasSemComprar && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-primary" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Dias sem Comprar</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {diasSemComprar.temComprasFaturadas 
+                        ? `Última compra faturada em ${formatDate(diasSemComprar.ultimaCompraFaturada)}`
+                        : "Sem compras faturadas"}
+                    </p>
+                  </div>
+                </div>
+                {diasSemComprar.temComprasFaturadas && diasSemComprar.diasSemComprar !== null && (
+                  <div className="text-right">
+                    <p className={`text-3xl font-bold ${
+                      diasSemComprar.diasSemComprar >= 180 ? "text-red-600" :
+                      diasSemComprar.diasSemComprar >= 90 ? "text-orange-500" :
+                      "text-green-600"
+                    }`}>
+                      {diasSemComprar.diasSemComprar}
+                    </p>
+                    <p className="text-xs text-muted-foreground">dias</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Último Pedido Card */}
+          {ultimoPedido && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <ShoppingCart className="w-5 h-5 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Último Pedido</h3>
+                </div>
+                <Button size="sm" variant="outline" className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Ligar novamente
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Número</p>
+                  <p className="text-sm font-mono font-bold text-foreground mt-1">{ultimoPedido.codPedido}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Data</p>
+                  <p className="text-sm font-mono font-bold text-foreground mt-1">{formatDate(ultimoPedido.dtaEmissao)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</p>
+                  <div className="mt-1">
+                    <Badge className={getStatusBadge(ultimoPedido.isFaturado, ultimoPedido.situacao).color}>
+                      {getStatusBadge(ultimoPedido.isFaturado, ultimoPedido.situacao).label}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Valor</p>
+                  <p className="text-sm font-mono font-bold text-foreground mt-1">{formatCurrency(parseFloat(ultimoPedido.valorFinal || ultimoPedido.valorTotal || "0"))}</p>
+                </div>
+              </div>
+
+              {ultimoPedido.itens && ultimoPedido.itens.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Produtos</p>
+                  <div className="space-y-1">
+                    {ultimoPedido.itens.map((item: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-xs bg-muted/30 rounded p-2">
+                        <span className="text-foreground">{item.descSaida}</span>
+                        <span className="text-muted-foreground font-mono">{item.qtde} {item.unidade || "un"}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Evolução Mensal */}
+          {evolucao.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg p-5">
+              <h3 className="text-sm font-semibold text-foreground mb-1">Evolução Mensal</h3>
+              <p className="text-xs text-muted-foreground mb-4">Histórico de compras ao longo do tempo</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={evolucao}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="mes" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="faturado" name="Faturado" fill="#0F4C75" radius={[4, 4, 0, 0]} barSize={24} />
+                  <Bar dataKey="recebido" name="Recebido" fill="#2D6A4F" radius={[4, 4, 0, 0]} barSize={24} />
+                </BarChart>
+              </ResponsiveContainer>
+            </motion.div>
+          )}
+
+          {/* Histórico de Pedidos */}
+          {pedidos.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="p-5 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Histórico de Pedidos</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {pedidos.length} pedidos · Ordenados do mais recente ao mais antigo
+                    </p>
+                  </div>
+                  <ShoppingCart className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+              <ScrollArea className="max-h-[600px] border-t border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
+                      <tr>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Pedido</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Data</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Vendedor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pedidos.map((p: any, i: number) => {
+                        const statusInfo = getStatusBadge(p.isFaturado, p.situacao);
+                        return (
+                          <tr key={p.id || i} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                            <td className="py-2 px-3 font-mono font-bold">{p.codPedido}</td>
+                            <td className="py-2 px-3">{formatDate(p.dtaEmissao)}</td>
+                            <td className="py-2 px-3">
+                              <Badge className={statusInfo.color}>
+                                {statusInfo.label}
+                              </Badge>
+                            </td>
+                            <td className="py-2 px-3 text-right font-mono font-medium">{formatCurrency(parseFloat(p.valorFinal || p.valorTotal || "0"))}</td>
+                            <td className="py-2 px-3 text-muted-foreground">{p.codUsuario || "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          )}
+
+          {/* Produtos já Comprados */}
+          {produtos.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="p-5 border-b border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Produtos já Comprados</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {produtos.length} produtos · Agregados por histórico de pedidos
+                    </p>
+                  </div>
+                  <Package className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por produto..."
+                    value={searchProduto}
+                    onChange={(e) => setSearchProduto(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              <ScrollArea className="max-h-[600px] border-t border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
+                      <tr>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Produto</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Qtd Total</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Nº Pedidos</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Última Compra</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {produtosFiltrados.map((p: any, i: number) => (
+                        <tr key={p.codProd || i} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                          <td className="py-2 px-3">
+                            <div>
+                              <p className="font-medium text-foreground">{p.descSaida}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono">{p.codProd}</p>
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-medium">{parseFloat(p.qtdTotal || "0").toFixed(2)}</td>
+                          <td className="py-2 px-3 text-right font-mono">{p.nroPedidos}</td>
+                          <td className="py-2 px-3">{formatDate(p.ultimaCompra)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          )}
+
+          {/* Títulos Table */}
+          {titulos.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="bg-card border border-border rounded-lg overflow-hidden">
+              <div className="p-5 border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Histórico de Títulos (Contas a Receber)</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {titulos.length} títulos · Ordenados do mais recente ao mais antigo
+                    </p>
+                  </div>
+                  <DollarSign className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+              <ScrollArea className="max-h-[600px] border-t border-border">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="bg-muted/50 sticky top-0 z-10 border-b border-border">
+                      <tr>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Nº NF</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Parcela</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Situação</th>
+                        <th className="text-left py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Descrição</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Vencimento</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Pagamento</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Valor Pago</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Desconto</th>
+                        <th className="text-right py-2.5 px-3 font-semibold text-muted-foreground uppercase tracking-wider">Atraso</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {titulos.map((t: any, i: number) => {
+                        const atraso = t.atrasoDias || 0;
+                        const situacaoCor = t.situacao === "PAGO" || t.situacao === "LIQUIDADO"
+                          ? "bg-green-ok-light text-green-ok"
+                          : t.situacao === "ABERTO"
+                          ? "bg-orange-alert-light text-orange-alert"
+                          : "bg-muted text-muted-foreground";
+                        return (
+                          <tr key={t.id || i} className="border-t border-border/50 hover:bg-muted/30 transition-colors">
+                            <td className="py-2 px-3 font-mono">{t.numNf || t.cont}</td>
+                            <td className="py-2 px-3 font-mono">{t.parcela}</td>
+                            <td className="py-2 px-3">
+                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${situacaoCor}`}>
+                                {t.situacao || "N/D"}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-muted-foreground">{t.descricao || "—"}</td>
+                            <td className="py-2 px-3 text-right font-mono">{formatDate(t.dtaVecto)}</td>
+                            <td className="py-2 px-3 text-right font-mono font-medium">{formatCurrency(parseFloat(t.valor || "0"))}</td>
+                            <td className="py-2 px-3 text-right font-mono">{formatDate(t.dtaPagto)}</td>
+                            <td className="py-2 px-3 text-right font-mono">{formatCurrency(parseFloat(t.valorPago || "0"))}</td>
+                            <td className="py-2 px-3 text-right font-mono">{parseFloat(t.desconto || "0") > 0 ? formatCurrency(parseFloat(t.desconto)) : "—"}</td>
+                            <td className="py-2 px-3 text-right">
+                              <span className={`font-mono px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                atraso <= 0 ? "bg-green-ok-light text-green-ok" : atraso <= 5 ? "bg-petrol-bg text-petrol" : "bg-orange-alert-light text-orange-alert"
+                              }`}>
+                                {atraso}d
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          )}
+
+          <footer className="text-center py-4 border-t border-border">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+              UNIX PACK Embalagens Flexíveis — Histórico do Cliente
+            </p>
+          </footer>
         </div>
       </main>
     </div>
