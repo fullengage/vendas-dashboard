@@ -59,7 +59,7 @@ export function PedidosHistorico() {
     codUsuario: filterVendedor || undefined,
     dataInicio: filterDataInicio || undefined,
     dataFim: filterDataFim || undefined,
-    isFaturado: filterStatus === "faturado" ? true : filterStatus === "nao-faturado" ? false : undefined,
+    isFaturado: filterStatus === "faturado" ? true : filterStatus === "nao-faturado" ? false : filterStatus === "todos" ? undefined : undefined,
     limite: itensPorPagina,
     offset: paginaAtual * itensPorPagina,
   }), [filterCliente, filterVendedor, filterDataInicio, filterDataFim, filterStatus, paginaAtual]);
@@ -103,10 +103,10 @@ export function PedidosHistorico() {
         {/* Header */}
         <div className="mb-6">
           <Link href="/">
-            <a className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4">
+            <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4 cursor-pointer">
               <ArrowLeft className="w-4 h-4" />
               Voltar
-            </a>
+            </span>
           </Link>
           <div className="flex items-center justify-between">
             <div>
@@ -206,7 +206,7 @@ export function PedidosHistorico() {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="todos">Todos</SelectItem>
                   <SelectItem value="faturado">Faturado</SelectItem>
                   <SelectItem value="nao-faturado">Não Faturado</SelectItem>
                 </SelectContent>
