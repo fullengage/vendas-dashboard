@@ -699,9 +699,12 @@ export default function Home() {
                     <tr key={v.nome} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 px-4 text-muted-foreground">{i + 1}</td>
                       <td className="py-2.5 px-4 font-medium max-w-[200px] truncate" title={v.nome}>
-                        <Link href={`/vendedor/${encodeURIComponent(v.nome)}`}>
-                          <span className="text-primary hover:underline cursor-pointer">{v.nome}</span>
-                        </Link>
+                        <span 
+                          className="text-primary hover:underline cursor-pointer" 
+                          onClick={() => window.location.href = `/vendedor/${encodeURIComponent(v.nome)}`}
+                        >
+                          {v.nome}
+                        </span>
                       </td>
                       <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalValor)}</td>
                       <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(v.totalPago)}</td>
