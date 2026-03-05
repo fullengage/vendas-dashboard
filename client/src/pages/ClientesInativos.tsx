@@ -338,11 +338,14 @@ export default function ClientesInativos() {
                         </td>
                         <td className="py-2.5 px-4 text-right font-mono">{formatCurrency(parseFloat(c.totalValor))}</td>
                         <td className="py-2.5 px-4 text-right">
-                          <Link href={`/cliente/${encodeURIComponent(c.cliente)}?vendedor=${encodeURIComponent(c.vendedor)}`}>
-                            <Button variant="ghost" size="sm" className="h-7 text-xs">
-                              Ver Histórico
-                            </Button>
-                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => window.location.href = `/cliente/${encodeURIComponent(c.cliente)}?vendedor=${encodeURIComponent(c.vendedor)}`}
+                          >
+                            Ver Histórico
+                          </Button>
                         </td>
                       </tr>
                     );
