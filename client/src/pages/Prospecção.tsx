@@ -92,12 +92,13 @@ export function Prospecção() {
       <main className="container mx-auto py-6">
         {/* Header */}
         <div className="mb-6">
-          <Link href="/">
-            <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4 cursor-pointer">
-              <ChevronLeft className="w-4 h-4" />
-              Voltar
-            </span>
-          </Link>
+          <span 
+            onClick={() => window.location.href = '/'}
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors mb-4 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Voltar
+          </span>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
