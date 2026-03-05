@@ -122,7 +122,7 @@
 ## Fase 15: Importar Leads e Criar P\u00e1gina de Prospec\u00e7\u00e3o## Fase 15: Importar Leads e Criar Página de Prospecção WhatsApp
 - [x] Criar tabela leads no banco de dados com campos: id, razao_social, nome_fantasia, cnpj, cpf, email, telefone, celular, endereco, cidade, estado, cep, status_contato, observacoes, created_at
 - [x] Criar função de import do CSV para tabela leads
-- [ ] Importar 998 clientes/leads do arquivo CSV (em progresso)
+- [x] Importar 997 clientes/leads do arquivo CSV (sucesso!) (em progresso)
 - [x] Criar endpoints tRPC para listar leads, atualizar status, adicionar observações
 - [x] Criar página Prospecção.tsx com tabela de leads
 - [x] Adicionar filtros: status de contato, cidade, estado, busca por nome/cnpj
