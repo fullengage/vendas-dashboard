@@ -1306,3 +1306,138 @@ export async function obterEstatisticasWhatsApp(): Promise<any> {
     naoValidados: (naoValidados[0] as any)?.count || 0,
   };
 }
+
+
+// ============================================================================
+// BRASILAPI - Enriquecimento de dados via CNPJ
+// ============================================================================
+
+/**
+ * Consulta a BrasilAPI para obter dados completos de uma empresa pelo CNPJ
+ */
+export async function consultarBrasilAPI(cnpj: string) {
+  try {
+    // Remove caracteres especiais do CNPJ
+    const cnpjLimpo = cnpj.replace(/\D/g, '');
+    
+    if (cnpjLimpo.length !== 14) {
+      throw new Error('CNPJ inválido');
+    }
+
+    const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+    
+    if (!response.ok) {
+      throw new Error(`BrasilAPI error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erro ao consultar BrasilAPI:', error);
+    return null;
+  }
+}
+
+/**
+ * Enriquece um lead com dados da BrasilAPI
+ */
+export async function enriquecerLeadComBrasilAPI(leadId: number, cnpj: string) {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const dadosBrasilAPI = await consultarBrasilAPI(cnpj);
+    
+    if (!dadosBrasilAPI) {
+      return { sucesso: false, mensagem: 'Não foi possível consultar BrasilAPI' };
+    }
+
+    // Mapear dados da BrasilAPI para a tabela leads
+    const atualizacoes: any = {};
+    
+    if (dadosBrasilAPI.razao_social) {
+      atualizacoes.razaoSocial = dadosBrasilAPI.razao_social;
+    }
+    if (dadosBrasilAPI.nome_fantasia) {
+      atualizacoes.nomeFantasia = dadosBrasilAPI.nome_fantasia;
+    }
+    if (dadosBrasilAPI.logradouro) {
+      atualizacoes.endereco = dadosBrasilAPI.logradouro;
+    }
+    if (dadosBrasilAPI.bairro) {
+      atualizacoes.bairro = dadosBrasilAPI.bairro;
+    }
+    if (dadosBrasilAPI.municipio) {
+      atualizacoes.cidade = dadosBrasilAPI.municipio;
+    }
+    if (dadosBrasilAPI.uf) {
+      atualizacoes.estado = dadosBrasilAPI.uf;
+    }
+    if (dadosBrasilAPI.cep) {
+      atualizacoes.cep = dadosBrasilAPI.cep;
+    }
+
+    // Atualizar lead no banco
+    if (Object.keys(atualizacoes).length > 0) {
+      atualizacoes.updatedAt = new Date();
+      
+      await db
+        .update(leads)
+        .set(atualizacoes)
+        .where(eq(leads.id, leadId));
+
+      return { sucesso: true, mensagem: 'Lead enriquecido com sucesso', dados: dadosBrasilAPI };
+    }
+
+    return { sucesso: false, mensagem: 'Nenhum dado encontrado para enriquecer' };
+  } catch (error) {
+    console.error('Erro ao enriquecer lead:', error);
+    return { sucesso: false, mensagem: 'Erro ao enriquecer lead' };
+  }
+}
+
+/**
+ * Enriquece todos os leads com dados da BrasilAPI em lote
+ */
+export async function enriquecerTodosLeadsComBrasilAPI() {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    // Buscar todos os leads com CNPJ
+    const todosLeads = await db
+      .select()
+      .from(leads)
+      .where(and(
+        isNotNull(leads.cnpj),
+        ne(leads.cnpj, '')
+      ));
+
+    let sucessos = 0;
+    let erros = 0;
+
+    // Processar em lotes de 5 para não sobrecarregar a API
+    for (let i = 0; i < todosLeads.length; i += 5) {
+      const lote = (todosLeads as any[]).slice(i, i + 5);
+      
+      await Promise.all(
+        lote.map(async (lead) => {
+          const resultado = await enriquecerLeadComBrasilAPI(lead.id, lead.cnpj || '');
+          if (resultado.sucesso) {
+            sucessos++;
+          } else {
+            erros++;
+          }
+        })
+      );
+
+      // Aguardar 1 segundo entre lotes para respeitar rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    return { sucessos, erros, total: todosLeads.length };
+  } catch (error) {
+    console.error('Erro ao enriquecer leads em lote:', error);
+    return { sucessos: 0, erros: 0, total: 0 };
+  }
+}

@@ -18,6 +18,9 @@ import {
   validarWhatsAppLead,
   validarWhatsAppTodos,
   obterEstatisticasWhatsApp,
+  consultarBrasilAPI,
+  enriquecerLeadComBrasilAPI,
+  enriquecerTodosLeadsComBrasilAPI,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 
@@ -166,5 +169,26 @@ export const whatsappRouter = router({
   obterEstatisticas: publicProcedure
     .query(async () => {
       return obterEstatisticasWhatsApp();
+    }),
+});
+
+
+export const brasilApiRouter = router({
+  consultarCNPJ: publicProcedure
+    .input(z.object({ cnpj: z.string() }))
+    .query(async ({ input }) => {
+      const dados = await consultarBrasilAPI(input.cnpj);
+      return dados || { error: 'CNPJ nao encontrado' };
+    }),
+  
+  enriquecerLead: publicProcedure
+    .input(z.object({ leadId: z.number(), cnpj: z.string() }))
+    .mutation(async ({ input }) => {
+      return enriquecerLeadComBrasilAPI(input.leadId, input.cnpj);
+    }),
+  
+  enriquecerTodos: publicProcedure
+    .mutation(async () => {
+      return enriquecerTodosLeadsComBrasilAPI();
     }),
 });

@@ -30,7 +30,7 @@ import {
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 import { InsertContaReceber } from "../drizzle/schema";
-import { pedidosRouter, whatsappRouter } from "./pedidosRouter";
+import { pedidosRouter, whatsappRouter, brasilApiRouter } from "./pedidosRouter";
 
 function parseDate(dateStr: string | null | undefined): string | null {
   if (!dateStr || dateStr.trim() === "") return null;
@@ -250,6 +250,7 @@ export const appRouter = router({
   }),
   pedidos: pedidosRouter,
   whatsapp: whatsappRouter,
+  brasilapi: brasilApiRouter,
   leads: router({
     listaComFiltros: publicProcedure
       .input(

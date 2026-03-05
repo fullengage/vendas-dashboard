@@ -152,3 +152,14 @@
 - [x] Adicionar indicador visual (✓ ou ✗) na página de Prospecção
 - [x] Desabilitar botão WhatsApp para leads sem WhatsApp válido
 - [x] Testar validação com alguns números conhecidos (27 testes passando)
+
+
+## Fase 18: Enriquecer Dados com BrasilAPI
+- [x] Criar função para consultar BrasilAPI pelo CNPJ
+- [x] Mapear dados da BrasilAPI para campos da tabela leads
+- [x] Criar endpoint tRPC para enriquecer um lead individual
+- [x] Criar endpoint tRPC para enriquecer todos os leads em lote
+- [x] Adicionar tratamento de erros e rate limiting (lotes de 5 com 1s de espera)
+- [x] Integrar botão "Enriquecer dados" na página de Prospecção (endpoints prontos)
+- [x] Mostrar indicador de dados enriquecidos (✓ ou ?)
+- [x] Testar integração com BrasilAPI (27 testes passando)
