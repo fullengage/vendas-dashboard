@@ -13,6 +13,8 @@ import HistoricoCliente from "./pages/HistoricoCliente";
 import ClientesInativos from "./pages/ClientesInativos";
 import { PedidosHistorico } from "./pages/PedidosHistorico";
 import { Prospecção } from "./pages/Prospecção";
+import { SidebarNav } from "./components/SidebarNav";
+import { Breadcrumbs } from "./components/Breadcrumbs";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -47,8 +49,16 @@ function App() {
         // switchable
       >
         <TooltipProvider delayDuration={200}>
-          <Toaster />
-          <Router />
+          <div className="flex h-screen bg-background">
+            <SidebarNav />
+            <main className="flex-1 flex flex-col overflow-hidden md:ml-64">
+              <Breadcrumbs />
+              <div className="flex-1 overflow-auto">
+                <Toaster />
+                <Router />
+              </div>
+            </main>
+          </div>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

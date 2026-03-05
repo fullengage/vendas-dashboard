@@ -130,3 +130,14 @@
 - [x] Adicionar coluna de status de contato (Não contatado, Contatado, Interessado, Proposta enviada, Fechado)
 - [x] Adicionar campo de observações para cada lead
 - [ ] Escrever testes vitest para novos endpoints
+
+
+## Fase 16: Melhorar Navegação - Menu Lateral e UX
+- [x] Criar componente SidebarNav.tsx com menu lateral colapsável
+- [x] Organizar itens do menu por categoria (Dashboard, Vendas, Clientes, Leads, Relatórios)
+- [x] Adicionar ícones para cada seção do menu
+- [x] Implementar indicador de página ativa no menu
+- [x] Adicionar breadcrumbs em todas as páginas
+- [x] Integrar menu lateral no App.tsx com layout responsivo
+- [x] Adicionar mobile menu (hamburger) para telas pequenas
+- [x] Testar navegação em desktop e mobile
