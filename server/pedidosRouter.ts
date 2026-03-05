@@ -15,6 +15,9 @@ import {
   listaPedidosComFiltros,
   contaPedidosComFiltros,
   buscaPedidosPorNumero,
+  validarWhatsAppLead,
+  validarWhatsAppTodos,
+  obterEstatisticasWhatsApp,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 
@@ -140,5 +143,28 @@ export const pedidosRouter = router({
     .input(z.object({ codPedido: z.string() }))
     .query(async ({ input }) => {
       return buscaPedidosPorNumero(input.codPedido);
+    }),
+});
+
+
+// Endpoints de validação de WhatsApp (adicionar antes do fechamento do router)
+// Nota: Adicionar manualmente no pedidosRouter.ts antes do fechamento
+
+export const whatsappRouter = router({
+  validarLead: publicProcedure
+    .input(z.object({ leadId: z.number() }))
+    .mutation(async ({ input }) => {
+      const temWhatsApp = await validarWhatsAppLead(input.leadId);
+      return { success: true, temWhatsApp };
+    }),
+  
+  validarTodos: publicProcedure
+    .mutation(async () => {
+      return validarWhatsAppTodos();
+    }),
+  
+  obterEstatisticas: publicProcedure
+    .query(async () => {
+      return obterEstatisticasWhatsApp();
     }),
 });

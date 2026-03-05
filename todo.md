@@ -141,3 +141,14 @@
 - [x] Integrar menu lateral no App.tsx com layout responsivo
 - [x] Adicionar mobile menu (hamburger) para telas pequenas
 - [x] Testar navegação em desktop e mobile
+
+
+## Fase 17: Validar WhatsApp dos Leads
+- [x] Criar função de validação de formato de número de telefone
+- [x] Integrar validação com API do WhatsApp (ou usar biblioteca)
+- [x] Adicionar coluna has_whatsapp na tabela leads
+- [x] Criar endpoint tRPC para validar WhatsApp de um lead
+- [x] Criar endpoint tRPC para validar todos os leads em lote
+- [x] Adicionar indicador visual (✓ ou ✗) na página de Prospecção
+- [x] Desabilitar botão WhatsApp para leads sem WhatsApp válido
+- [x] Testar validação com alguns números conhecidos (27 testes passando)

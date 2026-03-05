@@ -178,6 +178,8 @@ export const leads = mysqlTable("leads", {
   ]).default("nao_contatado").notNull(),
   observacoes: text("observacoes"),
   ativo: int("ativo").default(1).notNull(),
+  hasWhatsapp: int("has_whatsapp").default(0).notNull(), // 0 = não validado, 1 = tem WhatsApp, 2 = não tem
+  lastWhatsappCheck: timestamp("last_whatsapp_check"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

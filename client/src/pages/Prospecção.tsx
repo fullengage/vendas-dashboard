@@ -279,14 +279,25 @@ export function Prospecção() {
                             <Badge className={statusBadge.color}>{statusBadge.label}</Badge>
                           </td>
                           <td className="px-4 py-3 text-sm">
-                            <Button
-                              size="sm"
-                              onClick={() => openWhatsApp(lead.telefone, lead.celular, lead.razaoSocial)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              <MessageCircle className="w-4 h-4 mr-1" />
-                              WhatsApp
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              {lead.hasWhatsapp === 1 ? (
+                                <>
+                                  <Badge className="bg-green-100 text-green-700">✓ WhatsApp</Badge>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => openWhatsApp(lead.telefone, lead.celular, lead.razaoSocial)}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    <MessageCircle className="w-4 h-4 mr-1" />
+                                    Enviar
+                                  </Button>
+                                </>
+                              ) : lead.hasWhatsapp === 2 ? (
+                                <Badge className="bg-red-100 text-red-700">✗ Sem WhatsApp</Badge>
+                              ) : (
+                                <Badge className="bg-gray-100 text-gray-700">? Não validado</Badge>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

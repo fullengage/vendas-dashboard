@@ -43,6 +43,13 @@
       "when": 1772737797007,
       "tag": "0005_grey_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1772741969169,
+      "tag": "0006_common_jigsaw",
+      "breakpoints": true
     }
   ]
 }

@@ -1203,3 +1203,106 @@ export async function obterLead(leadId: number): Promise<any> {
   const result = await db.select().from(leads).where(eq(leads.id, leadId)).limit(1);
   return result[0] || null;
 }
+
+
+/**
+ * Validar formato de número de telefone para WhatsApp
+ * Aceita números brasileiros com ou sem formatação
+ */
+export function validarNumeroWhatsApp(telefone: string | null | undefined): boolean {
+  if (!telefone) return false;
+  
+  // Remove tudo que não é dígito
+  const apenasDigitos = telefone.replace(/\D/g, "");
+  
+  // Números brasileiros devem ter 11 dígitos (2 DDD + 9 dígitos do número)
+  // Ou 10 dígitos (2 DDD + 8 dígitos do número)
+  if (apenasDigitos.length === 11 || apenasDigitos.length === 10) {
+    // Verifica se começa com 1-9 (DDD válido)
+    const ddd = parseInt(apenasDigitos.substring(0, 2));
+    if (ddd >= 11 && ddd <= 99) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Validar WhatsApp de um lead específico
+ */
+export async function validarWhatsAppLead(leadId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const lead = await obterLead(leadId);
+  if (!lead) throw new Error("Lead not found");
+  
+  // Tenta validar celular primeiro, depois telefone
+  const temWhatsApp = validarNumeroWhatsApp(lead.celular) || validarNumeroWhatsApp(lead.telefone);
+  
+  // Atualiza o campo has_whatsapp (1 = tem, 2 = não tem)
+  const hasWhatsappValue = temWhatsApp ? 1 : 2;
+  
+  await db.update(leads)
+    .set({
+      hasWhatsapp: hasWhatsappValue,
+      lastWhatsappCheck: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(leads.id, leadId));
+  
+  return temWhatsApp;
+}
+
+/**
+ * Validar WhatsApp de todos os leads
+ */
+export async function validarWhatsAppTodos(): Promise<{ validados: number; comWhatsApp: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const todosLeads = await db.select().from(leads);
+  
+  let comWhatsApp = 0;
+  
+  for (const lead of todosLeads) {
+    const temWhatsApp = validarNumeroWhatsApp(lead.celular) || validarNumeroWhatsApp(lead.telefone);
+    const hasWhatsappValue = temWhatsApp ? 1 : 2;
+    
+    if (temWhatsApp) comWhatsApp++;
+    
+    await db.update(leads)
+      .set({
+        hasWhatsapp: hasWhatsappValue,
+        lastWhatsappCheck: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(leads.id, lead.id));
+  }
+  
+  return {
+    validados: todosLeads.length,
+    comWhatsApp,
+  };
+}
+
+/**
+ * Obter estatísticas de WhatsApp
+ */
+export async function obterEstatisticasWhatsApp(): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const total = await db.select({ count: count() }).from(leads);
+  const comWhatsApp = await db.select({ count: count() }).from(leads).where(eq(leads.hasWhatsapp, 1));
+  const semWhatsApp = await db.select({ count: count() }).from(leads).where(eq(leads.hasWhatsapp, 2));
+  const naoValidados = await db.select({ count: count() }).from(leads).where(eq(leads.hasWhatsapp, 0));
+  
+  return {
+    total: (total[0] as any)?.count || 0,
+    comWhatsApp: (comWhatsApp[0] as any)?.count || 0,
+    semWhatsApp: (semWhatsApp[0] as any)?.count || 0,
+    naoValidados: (naoValidados[0] as any)?.count || 0,
+  };
+}
