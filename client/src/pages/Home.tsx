@@ -320,30 +320,22 @@ export default function Home() {
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <Link href="/relatorio">
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                  Relatório Mensal
-                </Button>
-              </Link>
-              <Link href="/relatorio-regiao">
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Globe className="w-3.5 h-3.5 mr-1.5" />
-                  Região / Estado
-                </Button>
-              </Link>
-              <Link href="/clientes-inativos">
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-                  Clientes Inativos
-                </Button>
-              </Link>
-              <Link href="/upload">
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  <Upload className="w-3.5 h-3.5 mr-1.5" />
-                  Importar CSV
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => window.location.href = '/relatorio'}>
+                <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                Relatório Mensal
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => window.location.href = '/relatorio-regiao'}>
+                <Globe className="w-3.5 h-3.5 mr-1.5" />
+                Região / Estado
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => window.location.href = '/clientes-inativos'}>
+                <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
+                Clientes Inativos
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => window.location.href = '/upload'}>
+                <Upload className="w-3.5 h-3.5 mr-1.5" />
+                Importar CSV
+              </Button>
             </div>
           </div>
 
