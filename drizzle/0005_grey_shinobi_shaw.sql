@@ -1,0 +1,23 @@
+CREATE TABLE `leads` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`razao_social` varchar(255) NOT NULL,
+	`nome_fantasia` varchar(255),
+	`cnpj` varchar(20),
+	`cpf` varchar(20),
+	`email` varchar(255),
+	`telefone` varchar(20),
+	`celular` varchar(20),
+	`endereco` varchar(255),
+	`numero` varchar(20),
+	`complemento` varchar(255),
+	`bairro` varchar(100),
+	`cidade` varchar(100),
+	`estado` varchar(2),
+	`cep` varchar(10),
+	`status_contato` enum('nao_contatado','contatado','interessado','proposta_enviada','fechado','rejeitado') NOT NULL DEFAULT 'nao_contatado',
+	`observacoes` text,
+	`ativo` int NOT NULL DEFAULT 1,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `leads_id` PRIMARY KEY(`id`)
+);

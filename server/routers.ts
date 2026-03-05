@@ -23,6 +23,10 @@ import {
   getPedidosPorCliente,
   getItensPedido,
   getPedidosPorVendedor,
+  listaLeadsComFiltros,
+  contaLeadsComFiltros,
+  atualizarStatusLead,
+  obterLead,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 import { InsertContaReceber } from "../drizzle/schema";
@@ -245,6 +249,52 @@ export const appRouter = router({
       }),
   }),
   pedidos: pedidosRouter,
+  leads: router({
+    listaComFiltros: publicProcedure
+      .input(
+        z.object({
+          statusContato: z.string().optional(),
+          cidade: z.string().optional(),
+          estado: z.string().optional(),
+          busca: z.string().optional(),
+          limite: z.number().default(50),
+          offset: z.number().default(0),
+        })
+      )
+      .query(async ({ input }) => {
+        return listaLeadsComFiltros(input);
+      }),
+    contaComFiltros: publicProcedure
+      .input(
+        z.object({
+          statusContato: z.string().optional(),
+          cidade: z.string().optional(),
+          estado: z.string().optional(),
+          busca: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        const total = await contaLeadsComFiltros(input);
+        return { total };
+      }),
+    obter: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return obterLead(input.id);
+      }),
+    atualizarStatus: publicProcedure
+      .input(
+        z.object({
+          id: z.number(),
+          statusContato: z.string(),
+          observacoes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await atualizarStatusLead(input.id, input.statusContato, input.observacoes);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

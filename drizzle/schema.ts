@@ -148,3 +148,39 @@ export const importErrors = mysqlTable("import_errors", {
 
 export type ImportError = typeof importErrors.$inferSelect;
 export type InsertImportError = typeof importErrors.$inferInsert;
+
+/**
+ * Tabela de leads/clientes para prospecção via WhatsApp
+ */
+export const leads = mysqlTable("leads", {
+  id: int("id").autoincrement().primaryKey(),
+  razaoSocial: varchar("razao_social", { length: 255 }).notNull(),
+  nomeFantasia: varchar("nome_fantasia", { length: 255 }),
+  cnpj: varchar("cnpj", { length: 20 }),
+  cpf: varchar("cpf", { length: 20 }),
+  email: varchar("email", { length: 255 }),
+  telefone: varchar("telefone", { length: 20 }),
+  celular: varchar("celular", { length: 20 }),
+  endereco: varchar("endereco", { length: 255 }),
+  numero: varchar("numero", { length: 20 }),
+  complemento: varchar("complemento", { length: 255 }),
+  bairro: varchar("bairro", { length: 100 }),
+  cidade: varchar("cidade", { length: 100 }),
+  estado: varchar("estado", { length: 2 }),
+  cep: varchar("cep", { length: 10 }),
+  statusContato: mysqlEnum("status_contato", [
+    "nao_contatado",
+    "contatado",
+    "interessado",
+    "proposta_enviada",
+    "fechado",
+    "rejeitado"
+  ]).default("nao_contatado").notNull(),
+  observacoes: text("observacoes"),
+  ativo: int("ativo").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = typeof leads.$inferInsert;

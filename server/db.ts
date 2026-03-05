@@ -1,6 +1,6 @@
 import { eq, sql, and, gte, lte, desc, asc, count, sum, or, isNull, isNotNull, ne, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, contasReceber, InsertContaReceber, importBatches, importErrors, InsertImportBatch, InsertImportError, orders, orderItems, InsertOrder, InsertOrderItem } from "../drizzle/schema";
+import { InsertUser, users, contasReceber, InsertContaReceber, importBatches, importErrors, InsertImportBatch, InsertImportError, orders, orderItems, InsertOrder, InsertOrderItem, leads, InsertLead } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -1008,4 +1008,198 @@ export async function buscaPedidosPorNumero(codPedido: string): Promise<any[]> {
     .from(orders)
     .where(like(orders.codPedido, `%${codPedido}%`))
     .orderBy(desc(orders.dtaEmissao));
+}
+
+
+// ============================================================================
+// LEADS - PROSPECÇÃO
+// ============================================================================
+
+/**
+ * Importar leads do CSV
+ */
+export async function importLeads(leadsData: InsertLead[]): Promise<{ created: number; updated: number; errors: string[] }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let created = 0;
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const lead of leadsData) {
+    try {
+      // Verificar se o lead já existe (por CNPJ ou CPF)
+      const existing = await db
+        .select()
+        .from(leads)
+        .where(
+      or(
+        lead.cnpj ? eq(leads.cnpj, lead.cnpj) : eq(leads.razaoSocial, lead.razaoSocial),
+        lead.cpf ? eq(leads.cpf, lead.cpf) : eq(leads.razaoSocial, lead.razaoSocial)
+      )
+        )
+        .limit(1);
+
+      if (existing.length > 0) {
+        // Atualizar lead existente
+        await db
+          .update(leads)
+          .set({
+            ...lead,
+            updatedAt: new Date(),
+          })
+          .where(eq(leads.id, existing[0].id));
+        updated++;
+      } else {
+        // Inserir novo lead
+        await db.insert(leads).values(lead);
+        created++;
+      }
+    } catch (err) {
+      errors.push(`Erro ao importar lead ${lead.razaoSocial}: ${err instanceof Error ? err.message : "unknown"}`);
+    }
+  }
+
+  return { created, updated, errors };
+}
+
+/**
+ * Listar leads com filtros
+ */
+export async function listaLeadsComFiltros(
+  filtros: {
+    statusContato?: string;
+    cidade?: string;
+    estado?: string;
+    busca?: string;
+    limite?: number;
+    offset?: number;
+  }
+): Promise<any[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions: any[] = [];
+
+  if (filtros.statusContato && filtros.statusContato !== "todos") {
+    conditions.push(eq(leads.statusContato, filtros.statusContato as any));
+  }
+
+  if (filtros.cidade) {
+    conditions.push(like(leads.cidade, `%${filtros.cidade}%`));
+  }
+
+  if (filtros.estado) {
+    conditions.push(eq(leads.estado, filtros.estado));
+  }
+
+  if (filtros.busca) {
+    conditions.push(
+      or(
+        like(leads.razaoSocial, `%${filtros.busca}%`),
+        like(leads.nomeFantasia, `%${filtros.busca}%`),
+        like(leads.cnpj, `%${filtros.busca}%`),
+        like(leads.cpf, `%${filtros.busca}%`)
+      )
+    );
+  }
+
+  let query: any = db.select().from(leads);
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  query = query.orderBy(desc(leads.createdAt));
+
+  if (filtros.limite) {
+    query = query.limit(filtros.limite);
+  }
+
+  if (filtros.offset) {
+    query = query.offset(filtros.offset);
+  }
+
+  return await query;
+}
+
+/**
+ * Contar leads com filtros
+ */
+export async function contaLeadsComFiltros(filtros: {
+  statusContato?: string;
+  cidade?: string;
+  estado?: string;
+  busca?: string;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions: any[] = [];
+
+  if (filtros.statusContato && filtros.statusContato !== "todos") {
+    conditions.push(eq(leads.statusContato, filtros.statusContato as any));
+  }
+
+  if (filtros.cidade) {
+    conditions.push(like(leads.cidade, `%${filtros.cidade}%`));
+  }
+
+  if (filtros.estado) {
+    conditions.push(eq(leads.estado, filtros.estado));
+  }
+
+  if (filtros.busca) {
+    conditions.push(
+      or(
+        like(leads.razaoSocial, `%${filtros.busca}%`),
+        like(leads.nomeFantasia, `%${filtros.busca}%`),
+        like(leads.cnpj, `%${filtros.busca}%`),
+        like(leads.cpf, `%${filtros.busca}%`)
+      )
+    );
+  }
+
+  let query: any = db.select({ count: count() }).from(leads);
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions));
+  }
+
+  const result = await query;
+  return (result[0] as any)?.count || 0;
+}
+
+/**
+ * Atualizar status de contato de um lead
+ */
+export async function atualizarStatusLead(
+  leadId: number,
+  statusContato: string,
+  observacoes?: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = {
+    statusContato,
+    updatedAt: new Date(),
+  };
+
+  if (observacoes) {
+    updateData.observacoes = observacoes;
+  }
+
+  await db.update(leads).set(updateData).where(eq(leads.id, leadId));
+}
+
+/**
+ * Obter um lead por ID
+ */
+export async function obterLead(leadId: number): Promise<any> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.select().from(leads).where(eq(leads.id, leadId)).limit(1);
+  return result[0] || null;
 }

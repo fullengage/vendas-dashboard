@@ -12,6 +12,7 @@ import DetalheVendedor from "./pages/DetalheVendedor";
 import HistoricoCliente from "./pages/HistoricoCliente";
 import ClientesInativos from "./pages/ClientesInativos";
 import { PedidosHistorico } from "./pages/PedidosHistorico";
+import { Prospecção } from "./pages/Prospecção";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/cliente/:nome"} component={HistoricoCliente} />
       <Route path="/clientes-inativos" component={ClientesInativos} />
       <Route path="/pedidos" component={PedidosHistorico} />
+      <Route path="/prospecção" component={Prospecção} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
