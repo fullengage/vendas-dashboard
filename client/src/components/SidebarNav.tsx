@@ -124,10 +124,10 @@ export function SidebarNav() {
                 <div className="space-y-1">
                   {category.items.map((item) => (
                     <Link key={item.href} href={item.href}>
-                      <a
+                      <span
                         onClick={() => setIsOpen(false)}
                         className={cn(
-                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                          "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer",
                           isActive(item.href)
                             ? "bg-primary text-primary-foreground"
                             : "text-foreground hover:bg-accent hover:text-accent-foreground"
@@ -135,7 +135,7 @@ export function SidebarNav() {
                       >
                         {item.icon}
                         <span>{item.label}</span>
-                      </a>
+                      </span>
                     </Link>
                   ))}
                 </div>
