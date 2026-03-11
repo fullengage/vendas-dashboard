@@ -163,3 +163,11 @@
 - [x] Integrar botão "Enriquecer dados" na página de Prospecção (endpoints prontos)
 - [x] Mostrar indicador de dados enriquecidos (✓ ou ?)
 - [x] Testar integração com BrasilAPI (27 testes passando)
+
+
+## Fase 19: Adicionar CNPJ e Telefone na Página de Prospecção
+- [x] Adicionar coluna CNPJ na tabela de leads
+- [x] Adicionar coluna Telefone na tabela de leads
+- [x] Atualizar função openWhatsApp para usar o telefone em vez de celular
+- [x] Testar ação de WhatsApp com telefone real
+- [x] Validar exibição de CNPJ e Telefone na página

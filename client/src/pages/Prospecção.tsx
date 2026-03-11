@@ -233,6 +233,8 @@ export function Prospecção() {
                   <thead className="bg-muted/50 border-b border-border">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Empresa</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">CNPJ</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Telefone</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Contato</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Localização</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-foreground">Status</th>
@@ -253,13 +255,16 @@ export function Prospecção() {
                             </div>
                           </td>
                           <td className="px-4 py-3 text-sm">
+                            <p className="text-xs font-mono text-muted-foreground">{lead.cnpj || lead.cpf || "—"}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-xs font-mono">{lead.telefone || lead.celular || "—"}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
                             <div className="space-y-1">
-                              {lead.celular && (
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <Phone className="w-3 h-3" />
-                                  <span className="text-xs">{lead.celular}</span>
-                                </div>
-                              )}
                               {lead.email && (
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                   <Mail className="w-3 h-3" />
