@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, razao_social, celular, telefone FROM leads LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute SELECT id, razao_social, celular, telefone FROM leads LIMIT 10",
+  "rows": [
+    {
+      "id": "1",
+      "razao_social": "LOPES DISTRIBUIDORA LTDA F",
+      "celular": "NULL",
+      "telefone": "(62) 99672-4335"
+    },
+    {
+      "id": "2",
+      "razao_social": "PRODUTOS DE LATICINIOS  NATA LTDA F",
+      "celular": "NULL",
+      "telefone": "(62) 99848-2309"
+    },
+    {
+      "id": "3",
+      "razao_social": "SPA INDUSTRIA E COMERCIO DE ALIMENTOS LTDA F",
+      "celular": "NULL",
+      "telefone": "(63) 3217-2006"
+    },
+    {
+      "id": "4",
+      "razao_social": "LATICINIOS FORTALEZA INDUSTRIA E COMERCIO LTDA F",
+      "celular": "NULL",
+      "telefone": "(63) 3414-2920"
+    },
+    {
+      "id": "5",
+      "razao_social": "J V DE MENEZES LTDA F",
+      "celular": "NULL",
+      "telefone": "(63) 3415-3280"
+    },
+    {
+      "id": "6",
+      "razao_social": "NILTON D DA SILVA F",
+      "celular": "NULL",
+      "telefone": "(63) 34581165"
+    },
+    {
+      "id": "7",
+      "razao_social": "INDUSTRIA DE LATICINIOS BURITI LTDA F",
+      "celular": "NULL",
+      "telefone": "(63) 3459-1292"
+    },
+    {
+      "id": "8",
+      "razao_social": "AVICOLA GOTTY LTDA F",
+      "celular": "NULL",
+      "telefone": "(64) 3432-5100"
+    },
+    {
+      "id": "9",
+      "razao_social": "BORGES",
+      "celular": "NULL",
+      "telefone": "(64) 3444-2314"
+    },
+    {
+      "id": "10",
+      "razao_social": "MICHEL STOPPA LIMA JUNIOR F",
+      "celular": "NULL",
+      "telefone": "(64) 98149-6049"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\trazao_social\tcelular\ttelefone\n1\tLOPES DISTRIBUIDORA LTDA F\tNULL\t(62) 99672-4335\n2\tPRODUTOS DE LATICINIOS  NATA LTDA F\tNULL\t(62) 99848-2309\n3\tSPA INDUSTRIA E COMERCIO DE ALIMENTOS LTDA F\tNULL\t(63) 3217-2006\n4\tLATICINIOS FORTALEZA INDUSTRIA E COMERCIO LTDA F\tNULL\t(63) 3414-2920\n5\tJ V DE MENEZES LTDA F\tNULL\t(63) 3415-3280\n6\tNILTON D DA SILVA F\tNULL\t(63) 34581165\n7\tINDUSTRIA DE LATICINIOS BURITI LTDA F\tNULL\t(63) 3459-1292\n8\tAVICOLA GOTTY LTDA F\tNULL\t(64) 3432-5100\n9\tBORGES\tNULL\t(64) 3444-2314\n10\tMICHEL STOPPA LIMA JUNIOR F\tNULL\t(64) 98149-6049\n",
+  "stderr": "",
+  "execution_time_ms": 646
+}
