@@ -1561,3 +1561,103 @@ export async function sincronizarStatusFaturamentoPedido(pedidoId: number) {
     throw error;
   }
 }
+
+
+// ==================== Importação de Pedidos de Venda x Produtos (2026) ====================
+
+/**
+ * Importar pedidos de venda x produtos do CSV
+ * Atualiza orders e order_items com dados enriquecidos do novo CSV
+ */
+export async function importarPedidosVendaProdutos(
+  pedidos: any[],
+  batchId: number
+): Promise<{ created: number; updated: number; errors: string[] }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let created = 0;
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const pedido of pedidos) {
+    try {
+      // Buscar pedido existente
+      const existing = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.codPedido, pedido.codPedido))
+        .limit(1);
+
+      const orderData: any = {
+        codPedido: pedido.codPedido,
+        codPessoa: pedido.codPessoa,
+        codUsuario: pedido.codUsuario,
+        codEquipe: pedido.codEquipe,
+        dtaEmissao: pedido.dtaEmissao,
+        dtaEntrega: pedido.dtaEntrega,
+        dtaFaturamento: pedido.dtaFaturamento,
+        valorTotal: pedido.valorTotal.toString(),
+        desconto: pedido.desconto.toString(),
+        valorFinal: pedido.totalFinal.toString(),
+        situacao: pedido.situacao,
+        descSit: pedido.descSit,
+        codStatus: pedido.codStatus,
+        formaPagto: pedido.formaPagto,
+        importBatchId: batchId,
+      };
+
+      let orderId: number;
+
+      if (existing.length > 0) {
+        // Atualizar pedido existente
+        await db
+          .update(orders)
+          .set(orderData)
+          .where(eq(orders.codPedido, pedido.codPedido));
+        orderId = existing[0].id;
+        updated++;
+      } else {
+        // Inserir novo pedido
+        const result = await db.insert(orders).values(orderData);
+        orderId = (result as any).insertId as unknown as number;
+        created++;
+      }
+
+      // Atualizar ou inserir item do pedido
+      const itemData: InsertOrderItem = {
+        orderId,
+        codProd: pedido.codProd,
+        descSaida: pedido.descSaida,
+        unidade: pedido.unidade,
+        qtde: pedido.qtde.toString(),
+        valorUnit: pedido.valorUnit.toString(),
+        totalItem: pedido.totalItem.toString(),
+        desconto: pedido.desconto.toString(),
+        lote: pedido.lote,
+      };
+
+      try {
+        // Tentar inserir item
+        await db.insert(orderItems).values(itemData);
+      } catch (err) {
+        // Item já existe, tentar atualizar
+        try {
+          await db
+            .update(orderItems)
+            .set(itemData)
+            .where(and(
+              eq(orderItems.orderId, orderId),
+              eq(orderItems.codProd, pedido.codProd)
+            ));
+        } catch (updateErr) {
+          // Ignorar erro (idempotência)
+        }
+      }
+    } catch (err) {
+      errors.push(`Erro ao importar pedido ${pedido.codPedido}: ${err instanceof Error ? err.message : "unknown"}`);
+    }
+  }
+
+  return { created, updated, errors };
+}

@@ -179,3 +179,11 @@
 - [x] Criar endpoint tRPC para sincronizar pedidos
 - [x] Atualizar página de Histórico de Pedidos com novo status
 - [x] Testar sincronização automática
+
+
+## Fase 21: Importar Pedidos de Venda x Produtos (CSV 2026)
+- [x] Analisar estrutura do CSV e mapear colunas
+- [x] Criar parser para processar CSV com encoding ISO-8859-1
+- [x] Criar endpoint tRPC para importar pedidos de venda x produtos
+- [x] Integrar importação na página de upload
+- [x] Testar importação com 307 registros

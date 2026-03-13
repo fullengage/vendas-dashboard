@@ -21,8 +21,10 @@ import {
   consultarBrasilAPI,
   enriquecerLeadComBrasilAPI,
   enriquecerTodosLeadsComBrasilAPI,
+  importarPedidosVendaProdutos,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
+import { parsePedidosVendaProdutosCSV, calculateFileHashPedidosVendaProdutos } from "./parsers/pedidosVendaProdutosParser";
 
 export const pedidosRouter = router({
   importCSV: publicProcedure
@@ -190,5 +192,46 @@ export const brasilApiRouter = router({
   enriquecerTodos: publicProcedure
     .mutation(async () => {
       return enriquecerTodosLeadsComBrasilAPI();
+    }),
+  
+  importarPedidosVendaProdutosCSV: publicProcedure
+    .input(
+      z.object({
+        filename: z.string(),
+        content: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const fileHash = calculateFileHashPedidosVendaProdutos(input.content);
+        const { pedidos, errors } = parsePedidosVendaProdutosCSV(input.content);
+        
+        const batchId = await createImportBatch(input.filename, fileHash, pedidos.length);
+        const result = await importarPedidosVendaProdutos(pedidos, batchId);
+        
+        for (const error of errors) {
+          await logImportError(batchId, error.rowNumber, error.error, error.rawRow);
+        }
+        
+        await updateImportBatch(batchId, result.created + result.updated, errors.length, "completed");
+        
+        return {
+          success: true,
+          message: `Importação concluída: ${result.created} novos, ${result.updated} atualizados, ${errors.length} erros`,
+          created: result.created,
+          updated: result.updated,
+          errors: result.errors,
+          batchId,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          message: error instanceof Error ? error.message : "Erro desconhecido",
+          created: 0,
+          updated: 0,
+          errors: [error instanceof Error ? error.message : "Erro desconhecido"],
+          batchId: 0,
+        };
+      }
     }),
 });

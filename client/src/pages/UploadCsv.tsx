@@ -400,6 +400,28 @@ export default function UploadCsv() {
             </motion.div>
           )}
         </motion.div>
+
+        {/* Seção de Importação de Pedidos de Venda x Produtos */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mt-12 pt-8 border-t border-border"
+        >
+          <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Importar Pedidos de Venda x Produtos
+          </h2>
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              Importe o arquivo CSV de Pedidos de Venda x Produtos para enriquecer dados de pedidos e produtos.
+            </p>
+          </div>
+          {/* Será implementado em próxima fase */}
+          <div className="text-center py-8 bg-muted/30 rounded-lg border border-border">
+            <p className="text-sm text-muted-foreground">Funcionalidade em desenvolvimento...</p>
+          </div>
+        </motion.div>
       </main>
     </div>
   );

@@ -29,8 +29,10 @@ import {
   obterLead,
   sincronizarStatusFaturamento,
   sincronizarStatusFaturamentoPedido,
+  importarPedidosVendaProdutos,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
+import { parsePedidosVendaProdutosCSV, calculateFileHashPedidosVendaProdutos } from "./parsers/pedidosVendaProdutosParser";
 import { InsertContaReceber } from "../drizzle/schema";
 import { pedidosRouter, whatsappRouter, brasilApiRouter } from "./pedidosRouter";
 
