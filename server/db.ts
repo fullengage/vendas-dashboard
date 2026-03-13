@@ -1441,3 +1441,123 @@ export async function enriquecerTodosLeadsComBrasilAPI() {
     return { sucessos: 0, erros: 0, total: 0 };
   }
 }
+
+
+// ==================== Sincronização de Faturamento ====================
+
+/**
+ * Sincroniza o status de faturamento dos pedidos comparando com contas a receber.
+ * Um pedido é marcado como "faturado" se encontrar uma conta receber com dtaPagto preenchida.
+ * Caso contrário, é marcado como "nao_faturado".
+ */
+export async function sincronizarStatusFaturamento() {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    // Buscar todos os pedidos
+    const todosPedidos = await db
+      .select()
+      .from(orders);
+
+    let faturados = 0;
+    let naoFaturados = 0;
+    let erros = 0;
+
+    for (const pedido of todosPedidos) {
+      try {
+        // Buscar contas a receber que correspondem a este pedido
+        // Comparar por: num_nf (número da nota fiscal) e cod_pessoa (cliente)
+        const contasCorrespondentes = await db
+          .select()
+          .from(contasReceber)
+          .where(and(
+            eq(contasReceber.numNf, pedido.codPedido),
+            eq(contasReceber.codPessoa, pedido.codPessoa)
+          ));
+
+        // Verificar se alguma conta foi paga (tem dtaPagto preenchida)
+        const temPagamento = contasCorrespondentes.some(conta => conta.dtaPagto && conta.dtaPagto.trim() !== '');
+
+        const novoStatus = temPagamento ? 'faturado' : 'nao_faturado';
+
+        // Atualizar status do pedido
+        await db
+          .update(orders)
+          .set({ statusFaturamento: novoStatus as any })
+          .where(eq(orders.id, pedido.id));
+
+        if (temPagamento) {
+          faturados++;
+        } else {
+          naoFaturados++;
+        }
+      } catch (error) {
+        console.error(`Erro ao sincronizar pedido ${pedido.codPedido}:`, error);
+        erros++;
+      }
+    }
+
+    return {
+      faturados,
+      naoFaturados,
+      erros,
+      total: todosPedidos.length,
+    };
+  } catch (error) {
+    console.error('Erro ao sincronizar status de faturamento:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sincroniza o status de faturamento de um pedido específico.
+ */
+export async function sincronizarStatusFaturamentoPedido(pedidoId: number) {
+  try {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+
+    const pedido = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, pedidoId))
+      .limit(1);
+
+    if (!pedido || pedido.length === 0) {
+      throw new Error(`Pedido ${pedidoId} não encontrado`);
+    }
+
+    const pedidoData = pedido[0];
+
+    // Buscar contas a receber que correspondem a este pedido
+    const contasCorrespondentes = await db
+      .select()
+      .from(contasReceber)
+      .where(and(
+        eq(contasReceber.numNf, pedidoData.codPedido),
+        eq(contasReceber.codPessoa, pedidoData.codPessoa)
+      ));
+
+    // Verificar se alguma conta foi paga (tem dtaPagto preenchida)
+    const temPagamento = contasCorrespondentes.some(conta => conta.dtaPagto && conta.dtaPagto.trim() !== '');
+
+    const novoStatus = temPagamento ? 'faturado' : 'nao_faturado';
+
+    // Atualizar status do pedido
+    await db
+      .update(orders)
+      .set({ statusFaturamento: novoStatus as any })
+      .where(eq(orders.id, pedidoId));
+
+    return {
+      pedidoId,
+      codPedido: pedidoData.codPedido,
+      statusFaturamento: novoStatus,
+      contasEncontradas: contasCorrespondentes.length,
+    };
+  } catch (error) {
+    console.error(`Erro ao sincronizar status do pedido ${pedidoId}:`, error);
+    throw error;
+  }
+}

@@ -171,3 +171,11 @@
 - [x] Atualizar função openWhatsApp para usar o telefone em vez de celular
 - [x] Testar ação de WhatsApp com telefone real
 - [x] Validar exibição de CNPJ e Telefone na página
+
+
+## Fase 20: Sincronização Automática de Status de Faturamento
+- [x] Adicionar coluna statusFaturamento na tabela orders
+- [x] Criar função backend para sincronizar status de faturamento
+- [x] Criar endpoint tRPC para sincronizar pedidos
+- [x] Atualizar página de Histórico de Pedidos com novo status
+- [x] Testar sincronização automática

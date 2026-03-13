@@ -21,6 +21,7 @@ import {
   Filter,
   Eye,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -97,6 +98,19 @@ export function PedidosHistorico() {
 
   const temFiltrosAtivos = filterCliente || filterVendedor || filterStatus || filterDataInicio || filterDataFim || searchCodPedido;
 
+  // Mutation para sincronizar todos os pedidos
+  const sincronizarTodosMutation = trpc.faturamento.sincronizarTodos.useMutation();
+
+  const handleSincronizar = async () => {
+    try {
+      await sincronizarTodosMutation.mutateAsync();
+      // Recarregar dados após sincronização
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao sincronizar:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto py-6">
@@ -118,6 +132,14 @@ export function PedidosHistorico() {
                 Visualize todos os pedidos com filtros e busca avançada
               </p>
             </div>
+            <Button
+              onClick={handleSincronizar}
+              disabled={sincronizarTodosMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${sincronizarTodosMutation.isPending ? 'animate-spin' : ''}`} />
+              {sincronizarTodosMutation.isPending ? 'Sincronizando...' : 'Sincronizar Faturamento'}
+            </Button>
           </div>
         </div>
 

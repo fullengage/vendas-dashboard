@@ -27,6 +27,8 @@ import {
   contaLeadsComFiltros,
   atualizarStatusLead,
   obterLead,
+  sincronizarStatusFaturamento,
+  sincronizarStatusFaturamentoPedido,
 } from "./db";
 import { parsePedidosCSV, calculateFileHash } from "./parsers/pedidosParser";
 import { InsertContaReceber } from "../drizzle/schema";
@@ -295,6 +297,18 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await atualizarStatusLead(input.id, input.statusContato, input.observacoes);
         return { success: true };
+      }),
+  }),
+
+  faturamento: router({
+    sincronizarTodos: publicProcedure
+      .mutation(async () => {
+        return sincronizarStatusFaturamento();
+      }),
+    sincronizarPedido: publicProcedure
+      .input(z.object({ pedidoId: z.number() }))
+      .mutation(async ({ input }) => {
+        return sincronizarStatusFaturamentoPedido(input.pedidoId);
       }),
   }),
 });

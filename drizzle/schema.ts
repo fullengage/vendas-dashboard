@@ -85,6 +85,7 @@ export const orders = mysqlTable("orders", {
   codStatus: varchar("cod_status", { length: 20 }),
   formaPagto: varchar("forma_pagto", { length: 50 }),
   obs: text("obs"),
+  statusFaturamento: mysqlEnum("status_faturamento", ["faturado", "nao_faturado", "pendente"]).default("pendente").notNull(),
   importBatchId: int("import_batch_id"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

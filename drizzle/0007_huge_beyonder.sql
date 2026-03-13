@@ -1,0 +1,1 @@
+ALTER TABLE `orders` ADD `status_faturamento` enum('faturado','nao_faturado','pendente') DEFAULT 'pendente' NOT NULL;
