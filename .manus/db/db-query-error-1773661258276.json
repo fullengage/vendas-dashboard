@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO \"public\".\"client_team_history\" (\"id\", \"client_id\", \"old_team\", \"new_team\", \"changed_by\", \"changed_at\", \"motivo\") VALUES ('003e1433-40df-4dbd-ab48-039d4d3aa35f', '8bd55250-f257-41ce-88d6-1ee4a5b5e4a7', 'GERAL', 'f6a9f168-9ded-4800-9bf0-29367cb5a121', 'dedf7de8-38d5-453a-9329-49c70aa00ddc', '2025-11-13 19:26:47.111238+00', 'Cliente atribuído via captação') ON CONFLICT DO NOTHING;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4YM1DW8PNUmYgdV.dec729061751 --database CUP5Wn668FHrJUAyFxZ7sB --execute INSERT INTO \"public\".\"client_team_history\" (\"id\", \"client_id\", \"old_team\", \"new_team\", \"changed_by\", \"changed_at\", \"motivo\") VALUES ('003e1433-40df-4dbd-ab48-039d4d3aa35f', '8bd55250-f257-41ce-88d6-1ee4a5b5e4a7', 'GERAL', 'f6a9f168-9ded-4800-9bf0-29367cb5a121', 'dedf7de8-38d5-453a-9329-49c70aa00ddc', '2025-11-13 19:26:47.111238+00', 'Cliente atribuído via captação') ON CONFLICT DO NOTHING;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 20 near \"\"public\".\"client_team_history\" (\"id\", \"client_id\", \"old_team\", \"new_team\", \"changed_by\", \"changed_at\", \"motivo\") VALUES ('003e1433-40df-4dbd-ab48-039d4d3aa35f', '8bd55250-f257-41ce-88d6-1ee4a5b5e4a7', 'GERAL', 'f6a9f168-9ded-4800-9bf0-29367cb5a121', 'dedf7de8-38d5-453a-9329-49c70aa00ddc', '2025-11-13 19:26:47.111238+00', 'Cliente atribuído via captação') ON CONF"
+  ]
+}

@@ -57,6 +57,13 @@
       "when": 1773362732534,
       "tag": "0007_huge_beyonder",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1773661329668,
+      "tag": "0008_pretty_goblin_queen",
+      "breakpoints": true
     }
   ]
 }
