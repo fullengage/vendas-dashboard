@@ -64,6 +64,20 @@
       "when": 1773661329668,
       "tag": "0008_pretty_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1773747480006,
+      "tag": "0009_odd_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1773747512011,
+      "tag": "0010_blue_tyrannus",
+      "breakpoints": true
     }
   ]
 }
